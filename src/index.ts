@@ -6,7 +6,4 @@ const app = express()
 app.use(express.json())
 databaseService.connect()
 app.use('/users', usersRouter)
-app.listen(3000, () => {
-  console.log('Port 3000')
-})
-
+app.listen(3000)
