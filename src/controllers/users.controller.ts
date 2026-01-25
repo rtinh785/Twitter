@@ -1,15 +1,21 @@
 import { Request, Response } from 'express'
 import userService from '~/services/users.services'
+import { NextFunction, ParamsDictionary } from 'express-serve-static-core'
+import { RegisterReqBody } from '~/models/request/User.request'
 
-export const registerController = async (req: Request, res: Response) => {
-  const { email, password } = req.body
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const registerController = async (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  req: Request<ParamsDictionary, any, RegisterReqBody>,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const result = await userService.register({ email, password })
+    const result = await userService.register(req.body)
     res.json({ message: 'Register success!', result })
     return
   } catch (error) {
-    res.status(400).json({ message: 'Email or password is required', error })
-    return
+    next(error)
   }
 }
 

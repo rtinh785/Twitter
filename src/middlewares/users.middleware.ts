@@ -1,17 +1,9 @@
 import { Request, Response, NextFunction } from 'express'
 import { checkSchema, ParamSchema } from 'express-validator'
+import { ErrorWithStatus } from '~/models/Errors'
+import { RegisterReqBody } from '~/models/request/User.request'
 import userService from '~/services/users.services'
 import { validate } from '~/utils/validation'
-
-interface RegisterBody {
-  name: string
-  email: string
-  password: string
-  confirm_password: string
-  date_of_birth: string
-}
-
-type RegisterFields = keyof RegisterBody
 
 export const registerValidator = validate(
   checkSchema({
@@ -33,7 +25,7 @@ export const registerValidator = validate(
       custom: {
         options: async (value) => {
           const isExistEmail = await userService.checkEmailExist(value)
-          if (isExistEmail) throw new Error('Email already exist!')
+          if (isExistEmail) throw new ErrorWithStatus({ message: 'Email alreday exist!', status: 401 })
           return true
         }
       }
@@ -87,6 +79,7 @@ export const registerValidator = validate(
       }
     },
     date_of_birth: {
+      notEmpty: true,
       isISO8601: {
         options: {
           strict: true,
@@ -94,7 +87,7 @@ export const registerValidator = validate(
         }
       }
     }
-  } as Record<RegisterFields, ParamSchema>)
+  } as Record<keyof RegisterReqBody, ParamSchema>)
 )
 
 export const loginValidator = (req: Request, res: Response, next: NextFunction) => {
