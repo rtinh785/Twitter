@@ -1,6 +1,5 @@
 import jwt, { SignOptions } from 'jsonwebtoken'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const signToken = ({
   payload,
   privateKey = process.env.JWT_SECRET as string,
@@ -18,6 +17,23 @@ export const signToken = ({
         return reject(error)
       }
       resolve(token)
+    })
+  })
+}
+
+export const verifyToken = ({
+  token,
+  secretKey = process.env.JWT_SECRET as string
+}: {
+  token: string
+  secretKey?: string
+}) => {
+  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+    jwt.verify(token, secretKey, (error, decoded) => {
+      if (error || !decoded) {
+        return reject(error)
+      }
+      resolve(decoded as jwt.JwtPayload)
     })
   })
 }

@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { ValidationChain, validationResult } from 'express-validator'
 import { RunnableValidationChains } from 'express-validator/lib/middlewares/schema'
-import HTTP_STATUS from '~/constants/HttpStatus'
-
+import HTTP_STATUS from '~/constants/httpStatus'
 import { EntityError, ErrorWithStatus } from '~/models/Errors'
 
 export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
@@ -13,6 +12,7 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
       return next()
     }
     const errorObjecct = error.mapped()
+
     const entityErrors = new EntityError({ errors: {} })
 
     for (const key in errorObjecct) {
@@ -22,6 +22,7 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
       }
       entityErrors.errors[key] = errorObjecct[key]
     }
+
     next(entityErrors)
   }
 }
