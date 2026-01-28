@@ -36,6 +36,11 @@ class UserService {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
 
+  async checkEmailExist(email: string) {
+    const user = await databaseService.users.findOne({ email })
+    return Boolean(user)
+  }
+
   async register(payload: RegisterReqBody) {
     const result = await databaseService.users.insertOne(
       new User({
@@ -73,9 +78,9 @@ class UserService {
     return { access_token, refresh_token }
   }
 
-  async checkEmailExist(email: string) {
-    const user = await databaseService.users.findOne({ email })
-    return Boolean(user)
+  async logout(refresh_token: string) {
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token })
+    return USER_MESSAGES.LOGOUT_SUCCESS
   }
 }
 

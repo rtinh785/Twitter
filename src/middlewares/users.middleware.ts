@@ -1,14 +1,14 @@
-import { checkSchema, ParamSchema } from 'express-validator'
-import { verify } from 'node:crypto'
-import HTTP_STATUS from '~/constants/httpStatus'
-import { USER_MESSAGES } from '~/constants/messages'
-import { ErrorWithStatus } from '~/models/Errors'
-import { LoginReqBody, RegisterReqBody } from '~/models/request/User.request'
-import databaseService from '~/services/database.services'
-import userService from '~/services/users.services'
 import { verifyToken } from '~/utils/jwt'
 import { validate } from '~/utils/validation'
-
+import HTTP_STATUS from '~/constants/httpStatus'
+import { ErrorWithStatus } from '~/models/Errors'
+import userService from '~/services/users.services'
+import { USER_MESSAGES } from '~/constants/messages'
+import { checkSchema, ParamSchema } from 'express-validator'
+import { LoginReqBody, RegisterReqBody } from '~/models/request/User.request'
+import databaseService from '~/services/database.services'
+import { JsonWebTokenError } from 'jsonwebtoken'
+import { Request } from 'express'
 export const registerValidator = validate(
   checkSchema(
     {
@@ -134,13 +134,60 @@ export const accessTokenValidator = validate(
                 status: HTTP_STATUS.UNAUTHORIZED
               })
             }
-            const decode_authorization = await verifyToken({ token: accestoken })
-            req.decode_authorization = decode_authorization
+            try {
+              const decode_authorization = await verifyToken({ token: accestoken })
+              ;(req as Request).decode_authorization = decode_authorization
+            } catch (error) {
+              throw new ErrorWithStatus({
+                message: USER_MESSAGES.ACCESS_TOKEN_IS_INVALID,
+                status: HTTP_STATUS.UNAUTHORIZED
+              })
+            }
+
             return true
           }
         }
       }
     },
     ['headers']
+  )
+)
+
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        notEmpty: { errorMessage: USER_MESSAGES.REFRESH_TOKEN_IS_REQUIRED },
+        custom: {
+          options: async (value: string, { req }) => {
+            try {
+              const [decode_refresh_token, refresh_token] = await Promise.all([
+                verifyToken({ token: value }),
+                databaseService.refreshTokens.findOne({ token: value })
+              ])
+
+              if (refresh_token === null) {
+                throw new ErrorWithStatus({
+                  message: USER_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+
+              ;(req as Request).decode_refresh_token = decode_refresh_token
+            } catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: USER_MESSAGES.REFRESH_TOKEN_IS_INVALID,
+                  status: HTTP_STATUS.UNAUTHORIZED
+                })
+              }
+              throw error
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
   )
 )
