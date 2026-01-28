@@ -3,9 +3,12 @@ import databaseService from './database.services'
 import { LoginReqBody, RegisterReqBody } from '~/models/request/User.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
-import { TokenType } from '~/constants/enum'
+import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { USER_MESSAGES } from '~/constants/messages'
+import { ObjectId } from 'mongodb'
+import { access } from 'node:fs'
+import { ref } from 'node:process'
 
 class UserService {
   private signAccessToken(user_id: string) {
@@ -14,6 +17,7 @@ class UserService {
         user_id,
         token_type: TokenType.AccesToken
       },
+      privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
       options: {
         expiresIn: Number(process.env.ACCESS_TOKEN_EXPRIRES_IN)
       }
@@ -26,8 +30,22 @@ class UserService {
         user_id,
         token_type: TokenType.RefreshToken
       },
+      privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
       options: {
         expiresIn: Number(process.env.RERESH_TOKEN_EXPRIRES_IN)
+      }
+    })
+  }
+
+  private signEmailVerifyToken(user_id: string) {
+    return signToken({
+      payload: {
+        user_id,
+        token_type: TokenType.EmailVerifyToken
+      },
+      privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
+      options: {
+        expiresIn: Number(process.env.EMAIL_VERIFY_TOKEN_EXPIRES_IN)
       }
     })
   }
@@ -57,7 +75,8 @@ class UserService {
         user_id
       })
     )
-
+    const email_verified_token = await this.signEmailVerifyToken(user_id)
+    console.log(`Email verify token: ${email_verified_token}`)
     const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
     return { access_token, refresh_token }
   }
@@ -81,6 +100,27 @@ class UserService {
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token })
     return USER_MESSAGES.LOGOUT_SUCCESS
+  }
+
+  async verifyEmail(user_id: string) {
+    const [token] = await Promise.all([
+      this.signAccessTokenAndRefreshToken(user_id),
+      databaseService.users.updateOne(
+        { _id: new ObjectId(user_id) },
+        {
+          $set: {
+            email_verify_token: '',
+            verify: UserVerifyStatus.Verified,
+            updated_at: new Date()
+          }
+        }
+      )
+    ])
+    const [access_token, refresh_token] = token
+    return {
+      access_token,
+      refresh_token
+    }
   }
 }
 

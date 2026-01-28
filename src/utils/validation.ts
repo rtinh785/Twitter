@@ -8,11 +8,12 @@ export const validate = (validation: RunnableValidationChains<ValidationChain>) 
   return async (req: Request, res: Response, next: NextFunction) => {
     await validation.run(req)
     const error = validationResult(req)
+
     if (error.isEmpty()) {
       return next()
     }
-    const errorObjecct = error.mapped()
 
+    const errorObjecct = error.mapped()
     const entityErrors = new EntityError({ errors: {} })
 
     for (const key in errorObjecct) {

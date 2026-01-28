@@ -5,8 +5,12 @@ declare namespace NodeJS {
     DB_PASSWORD: string
     DB_USERS_COLLECTION: string
     DB_REFRESH_TOKENS_COLLECTION: string
-    PASSWORD_SECRET: string
-    JWT_SECRET: string
+    HASH_PASSWORD_SECRET: string
+
+    JWT_SECRET_ACCESS_TOKEN: string
+    JWT_SECRET_REFRESH_TOKEN: string
+    JWT_SECRET_EMAIL_TOKEN: string
+    
     ACCESS_TOKEN_EXPRIRES_IN: string
     RERESH_TOKEN_EXPRIRES_IN: string
   }
