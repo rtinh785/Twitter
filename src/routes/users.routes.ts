@@ -8,7 +8,8 @@ import {
   resendVerifyEmailController,
   forgotPasswordController,
   verifyForgotPasswordController,
-  resetPasswordController
+  resetPasswordController,
+  meController
 } from '~/controllers/users.controller'
 import {
   accessTokenValidator,
@@ -36,5 +37,6 @@ usersRouter.post(
   wrapRequestHandler(verifyForgotPasswordController)
 )
 usersRouter.post('/reset-password', resetPasswordValidator, wrapRequestHandler(resetPasswordController))
+usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(meController))
 
 export default usersRouter
