@@ -5,7 +5,7 @@ import { ErrorWithStatus } from '~/models/Errors'
 import userService from '~/services/users.services'
 import { USER_MESSAGES } from '~/constants/messages'
 import { checkSchema, ParamSchema } from 'express-validator'
-import { LoginReqBody, RegisterReqBody } from '~/models/request/User.request'
+import { ForgotPasswordReqBody, LoginReqBody, RegisterReqBody } from '~/models/request/User.request'
 import databaseService from '~/services/database.services'
 import { JsonWebTokenError } from 'jsonwebtoken'
 import { Request } from 'express'
@@ -237,4 +237,14 @@ export const verifyEmailTokenValidator = validate(
   )
 )
 
-
+export const forgotPasswordValidator = validate(
+  checkSchema(
+    {
+      email: {
+        isEmail: { errorMessage: USER_MESSAGES.EMAIL_IS_INVALID },
+        trim: true
+      }
+    } as Record<keyof ForgotPasswordReqBody, ParamSchema>,
+    ['body']
+  )
+)
