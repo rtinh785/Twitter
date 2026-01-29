@@ -13,5 +13,6 @@ declare namespace NodeJS {
     
     ACCESS_TOKEN_EXPRIRES_IN: string
     RERESH_TOKEN_EXPRIRES_IN: string
+    EMAIL_VERIFY_TOKEN_EXPIRES_IN: string
   }
 }

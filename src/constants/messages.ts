@@ -8,6 +8,7 @@ export const USER_MESSAGES = {
   EMAIL_IS_INVALID: 'Email is invalid',
   EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email or password is incorrect',
   EMAIL_VERIFY_TOKEN_IS_INVALID: 'Email verify token is invalid',
+  RESEND_EMAIL_VERIFY_SUCCESS: 'Resend email verify success',
   PASSWORD_IS_REQUIRED: 'Password is required',
   PASSWORD_MUST_BE_A_STRING: 'Password must be a string',
   PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50: 'Password length must be from 6 to 50',

@@ -202,7 +202,7 @@ export const refreshTokenValidator = validate(
   )
 )
 
-export const emailVerifyTokenValidator = validate(
+export const verifyEmailTokenValidator = validate(
   checkSchema(
     {
       email_verify_token: {
@@ -236,3 +236,5 @@ export const emailVerifyTokenValidator = validate(
     ['body']
   )
 )
+
+
