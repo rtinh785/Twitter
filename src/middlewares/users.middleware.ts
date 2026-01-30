@@ -10,12 +10,15 @@ import {
   LoginReqBody,
   RegisterReqBody,
   ResetPasswordValidator,
+  TokenPayload,
+  UpdateMeReqBody,
   VerifyForgotPasswordReqBody
 } from '~/models/request/User.request'
 import databaseService from '~/services/database.services'
 import { JsonWebTokenError } from 'jsonwebtoken'
-import { Request } from 'express'
+import { NextFunction, Response, Request } from 'express'
 import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enum'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -64,25 +67,50 @@ const forgotPasswordTokenSchema: ParamSchema = {
   }
 }
 
+const dateOfBirthSchema: ParamSchema = {
+  isISO8601: {
+    options: {
+      strict: true,
+      strictSeparator: true
+    },
+    errorMessage: USER_MESSAGES.DATE_OF_BIRTH_MUST_BE_ISO8601
+  }
+}
+
+const nameSchema: ParamSchema = {
+  isString: {
+    errorMessage: USER_MESSAGES.NAME_MUST_BE_A_STRING
+  },
+  trim: true,
+  notEmpty: {
+    errorMessage: USER_MESSAGES.NAME_IS_REQUIRED
+  },
+  isLength: {
+    options: {
+      min: 1,
+      max: 100
+    },
+    errorMessage: USER_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
+  }
+}
+
+const imageUrlSchema: ParamSchema = {
+  optional: true,
+  isString: { errorMessage: USER_MESSAGES.IMAGE_URL_MUST_BE_STRING },
+  trim: true,
+  isLength: {
+    options: {
+      min: 1,
+      max: 200
+    },
+    errorMessage: USER_MESSAGES.IMAGE_URL_LENGTH
+  }
+}
+
 export const registerValidator = validate(
   checkSchema(
     {
-      name: {
-        isString: {
-          errorMessage: USER_MESSAGES.NAME_MUST_BE_A_STRING
-        },
-        notEmpty: {
-          errorMessage: USER_MESSAGES.NAME_IS_REQUIRED
-        },
-        isLength: {
-          options: {
-            min: 1,
-            max: 100
-          },
-          errorMessage: USER_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
-        },
-        trim: true
-      },
+      name: nameSchema,
       email: {
         notEmpty: { errorMessage: USER_MESSAGES.EMAIL_IS_REQUIRED },
         isEmail: { errorMessage: USER_MESSAGES.EMAIL_IS_INVALID },
@@ -145,15 +173,7 @@ export const registerValidator = validate(
           }
         }
       },
-      date_of_birth: {
-        isISO8601: {
-          options: {
-            strict: true,
-            strictSeparator: true
-          },
-          errorMessage: USER_MESSAGES.DATE_OF_BIRTH_MUST_BE_ISO8601
-        }
-      }
+      date_of_birth: dateOfBirthSchema
     } as Record<keyof RegisterReqBody, ParamSchema>,
     ['body']
   )
@@ -351,6 +371,86 @@ export const resetPasswordValidator = validate(
         }
       }
     } as Record<keyof ResetPasswordValidator, ParamSchema>,
+    ['body']
+  )
+)
+
+export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
+  const { verify } = req.decode_authorization as TokenPayload
+  if (verify !== UserVerifyStatus.Verified) {
+    next(
+      new ErrorWithStatus({
+        message: USER_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    )
+  }
+  next()
+}
+
+export const updateMeValidator = validate(
+  checkSchema(
+    {
+      name: {
+        ...nameSchema,
+        isEmpty: undefined,
+        optional: true
+      },
+      date_of_birth: {
+        ...dateOfBirthSchema,
+        optional: true
+      },
+      bio: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.BIO_MUST_BE_STRING },
+        trim: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 200
+          },
+          errorMessage: USER_MESSAGES.BIO_LENGTH
+        }
+      },
+      location: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.LOCATION_MUST_BE_STRING },
+        trim: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 200
+          },
+          errorMessage: USER_MESSAGES.LOCATION_LENGTH
+        }
+      },
+      website: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.WEBSITE_MUST_BE_STRING },
+        trim: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 200
+          },
+          errorMessage: USER_MESSAGES.WEBSITE_LENGTH
+        }
+      },
+      username: {
+        optional: true,
+        isString: { errorMessage: USER_MESSAGES.USERNAME_MUST_BE_STRING },
+        trim: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 50
+          },
+          errorMessage: USER_MESSAGES.USERNAME_LENGTH_MUST_BE_FROM_4_TO_15
+        }
+      },
+      avatar: imageUrlSchema,
+      cover_photo: imageUrlSchema
+    } as Record<keyof UpdateMeReqBody, ParamSchema>,
     ['body']
   )
 )

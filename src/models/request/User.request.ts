@@ -23,6 +23,7 @@ export interface VerifyEmailReqBody {
 }
 export interface TokenPayload extends JwtPayload {
   user_id: string
+  verify: number
   token_type: TokenType
 }
 
@@ -37,4 +38,15 @@ export interface VerifyForgotPasswordReqBody {
 export interface ResetPasswordValidator extends VerifyForgotPasswordReqBody {
   new_password: string
   confirm_new_password: string
+}
+
+export interface UpdateMeReqBody {
+  name?: string
+  date_of_birth?: string
+  bio?: string
+  location?: string
+  website?: string
+  username?: string
+  avatar?: string
+  cover_photo?: string
 }
