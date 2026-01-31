@@ -12,7 +12,8 @@ import {
   updateGetMeController,
   getProfileController,
   followController,
-  unFollowController
+  unFollowController,
+  changePasswordController
 } from '~/controllers/users.controller'
 import { filterMiddleware } from '~/middlewares/common.middleware'
 import {
@@ -27,7 +28,8 @@ import {
   verifiedUserValidator,
   updateMeValidator,
   followValidator,
-  unFollowValidator
+  unFollowValidator,
+  changePasswordValidator
 } from '~/middlewares/users.middleware'
 import { UpdateMeReqBody } from '~/models/request/User.request'
 import { wrapRequestHandler } from '~/utils/handlers'
@@ -78,6 +80,13 @@ usersRouter.delete(
   verifiedUserValidator,
   unFollowValidator,
   wrapRequestHandler(unFollowController)
+)
+usersRouter.put(
+  '/change-password',
+  accessTokenValidator,
+  verifiedUserValidator,
+  changePasswordValidator,
+  wrapRequestHandler(changePasswordController)
 )
 
 export default usersRouter

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express'
 import userService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import {
+  ChangePassword,
   FollowReqBody,
   ForgotPasswordReqBody,
   LoginReqBody,
@@ -19,6 +20,8 @@ import databaseService from '~/services/database.services'
 import { ObjectId } from 'mongodb'
 import HTTP_STATUS from '~/constants/httpStatus'
 import { UserVerifyStatus } from '~/constants/enum'
+import { ErrorWithStatus } from '~/models/Errors'
+import { hashPassword } from '~/utils/crypto'
 
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
   const result = await userService.register(req.body)
@@ -115,7 +118,7 @@ export const getMeController = async (req: Request, res: Response) => {
 }
 
 export const updateGetMeController = async (req: Request<ParamsDictionary, any, UpdateMeReqBody>, res: Response) => {
-  const { user_id } = req.decode_authorization as TokenPayload
+  const { user_id, verify } = req.decode_authorization as TokenPayload
 
   const body = req.body
   const user = await userService.updateMe(user_id, body)
@@ -140,7 +143,36 @@ export const followController = async (req: Request<ParamsDictionary, any, Follo
 export const unFollowController = async (req: Request<UnFollowReqBody>, res: Response) => {
   const { user_id } = req.decode_authorization as TokenPayload
   const { followed_user_id } = req.params
-  const result = await userService.unFollowers(user_id, followed_user_id)
+  const result = await userService.unFollowers(new ObjectId(user_id), followed_user_id)
+  res.json({ result })
+  return
+}
+
+export const changePasswordController = async (req: Request<ParamsDictionary, any, ChangePassword>, res: Response) => {
+  const { user_id } = req.decode_authorization as TokenPayload
+  const { old_password, password: new_password } = req.body
+  const user = await databaseService.users.findOne({
+    _id: new ObjectId(user_id)
+  })
+
+  if (!user) {
+    throw new ErrorWithStatus({
+      message: USER_MESSAGES.USER_NOT_FOUND,
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  const { password } = user
+  const isMatch = hashPassword(old_password) === password
+  if (!isMatch) {
+    throw new ErrorWithStatus({
+      message: USER_MESSAGES.OLD_PASSWORD_NOT_MATCH,
+      status: HTTP_STATUS.UNAUTHORIZED
+    })
+  }
+
+  const result = await userService.changePassword(new ObjectId(user_id), new_password)
+
   res.json({ result })
   return
 }

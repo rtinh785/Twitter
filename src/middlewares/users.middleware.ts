@@ -6,6 +6,7 @@ import userService from '~/services/users.services'
 import { USER_MESSAGES } from '~/constants/messages'
 import { checkSchema, ParamSchema } from 'express-validator'
 import {
+  ChangePassword,
   FollowReqBody,
   ForgotPasswordReqBody,
   LoginReqBody,
@@ -20,6 +21,7 @@ import { JsonWebTokenError } from 'jsonwebtoken'
 import { NextFunction, Response, Request } from 'express'
 import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/constants/enum'
+import { REGEX_USERNAME } from '~/constants/regex'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -121,6 +123,58 @@ const followSchema: ParamSchema = {
   }
 }
 
+const passwordSchema: ParamSchema = {
+  isString: { errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_A_STRING },
+  notEmpty: { errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED },
+  isLength: {
+    options: {
+      min: 6,
+      max: 50
+    },
+    errorMessage: USER_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50
+  },
+  isStrongPassword: {
+    options: {
+      minLength: 6,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1
+    },
+    errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_STRONG
+  }
+}
+
+const confirm_passWordSchema: ParamSchema = {
+  isString: { errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING },
+  notEmpty: { errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED },
+  isLength: {
+    options: {
+      min: 6,
+      max: 50
+    },
+    errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50
+  },
+  isStrongPassword: {
+    options: {
+      minLength: 6,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1
+    },
+    errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRONG
+  },
+  custom: {
+    options: (value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error(USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD)
+      }
+      return true
+    }
+  }
+}
+
 export const registerValidator = validate(
   checkSchema(
     {
@@ -137,56 +191,8 @@ export const registerValidator = validate(
           }
         }
       },
-      password: {
-        isString: { errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_A_STRING },
-        notEmpty: { errorMessage: USER_MESSAGES.PASSWORD_IS_REQUIRED },
-        isLength: {
-          options: {
-            min: 6,
-            max: 50
-          },
-          errorMessage: USER_MESSAGES.PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50
-        },
-        isStrongPassword: {
-          options: {
-            minLength: 6,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumbers: 1,
-            minSymbols: 1
-          },
-          errorMessage: USER_MESSAGES.PASSWORD_MUST_BE_STRONG
-        }
-      },
-      confirm_password: {
-        isString: { errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING },
-        notEmpty: { errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED },
-        isLength: {
-          options: {
-            min: 6,
-            max: 50
-          },
-          errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_6_TO_50
-        },
-        isStrongPassword: {
-          options: {
-            minLength: 6,
-            minLowercase: 1,
-            minUppercase: 1,
-            minNumbers: 1,
-            minSymbols: 1
-          },
-          errorMessage: USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_STRONG
-        },
-        custom: {
-          options: (value, { req }) => {
-            if (value !== req.body.password) {
-              throw new Error(USER_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD)
-            }
-            return true
-          }
-        }
-      },
+      password: passwordSchema,
+      confirm_password: confirm_passWordSchema,
       date_of_birth: dateOfBirthSchema
     } as Record<keyof RegisterReqBody, ParamSchema>,
     ['body']
@@ -461,6 +467,13 @@ export const updateMeValidator = validate(
             max: 50
           },
           errorMessage: USER_MESSAGES.USERNAME_LENGTH_MUST_BE_FROM_4_TO_15
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!REGEX_USERNAME.test(value)) {
+              throw new Error(USER_MESSAGES.USERNAME_INVALID)
+            }
+          }
         }
       },
       avatar: imageUrlSchema,
@@ -485,5 +498,16 @@ export const unFollowValidator = validate(
       followed_user_id: followSchema
     } as Record<keyof FollowReqBody, ParamSchema>,
     ['params']
+  )
+)
+
+export const changePasswordValidator = validate(
+  checkSchema(
+    {
+      old_password: passwordSchema,
+      password: passwordSchema,
+      comfirm_password: confirm_passWordSchema
+    } as Record<keyof ChangePassword, ParamSchema>,
+    ['body']
   )
 )

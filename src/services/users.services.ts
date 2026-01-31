@@ -152,7 +152,14 @@ class UserService {
         }
       )
     ])
+
     const [access_token, refresh_token] = token
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        user_id,
+        token: refresh_token
+      })
+    )
     return {
       access_token,
       refresh_token
@@ -237,7 +244,18 @@ class UserService {
   }
 
   async updateMe(user_id: string, payload: UpdateMeReqBody) {
+    const { username } = payload
+
+    const isUserName = await databaseService.users.findOne({
+      username
+    })
+
+    if (isUserName) {
+      throw new Error(USER_MESSAGES.USERNAME_EXISTED)
+    }
+
     const _payload = payload.date_of_birth ? { ...payload, date_of_birth: new Date(payload.date_of_birth) } : payload
+
     const user = await databaseService.users.findOneAndUpdate(
       { _id: new ObjectId(user_id) },
       {
@@ -311,9 +329,9 @@ class UserService {
     }
   }
 
-  async unFollowers(user_id: string, followed_user_id: string | string[]) {
+  async unFollowers(user_id: ObjectId, followed_user_id: string | string[]) {
     const follower_user = databaseService.users.findOne({
-      user_id: new ObjectId(user_id)
+      user_id
     })
 
     if (follower_user === null) {
@@ -341,6 +359,25 @@ class UserService {
 
     return {
       message: USER_MESSAGES.UNFOLLOW_SUCCESS
+    }
+  }
+
+  async changePassword(user_id: ObjectId, new_password: string) {
+    await databaseService.users.updateOne(
+      {
+        _id: user_id
+      },
+      {
+        $set: {
+          password: hashPassword(new_password)
+        },
+        $currentDate: {
+          updated_at: true
+        }
+      }
+    )
+    return {
+      message: USER_MESSAGES.CHANGE_PASSWORD_SUCCESS
     }
   }
 }
