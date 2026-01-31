@@ -6,6 +6,7 @@ import userService from '~/services/users.services'
 import { USER_MESSAGES } from '~/constants/messages'
 import { checkSchema, ParamSchema } from 'express-validator'
 import {
+  FollowReqBody,
   ForgotPasswordReqBody,
   LoginReqBody,
   RegisterReqBody,
@@ -104,6 +105,19 @@ const imageUrlSchema: ParamSchema = {
       max: 200
     },
     errorMessage: USER_MESSAGES.IMAGE_URL_LENGTH
+  }
+}
+
+const followSchema: ParamSchema = {
+  custom: {
+    options: async (values: string, { req }) => {
+      if (!ObjectId.isValid(values)) {
+        throw new ErrorWithStatus({
+          message: USER_MESSAGES.INVALID_USER_ID,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+    }
   }
 }
 
@@ -377,6 +391,7 @@ export const resetPasswordValidator = validate(
 
 export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
   const { verify } = req.decode_authorization as TokenPayload
+
   if (verify !== UserVerifyStatus.Verified) {
     next(
       new ErrorWithStatus({
@@ -452,5 +467,23 @@ export const updateMeValidator = validate(
       cover_photo: imageUrlSchema
     } as Record<keyof UpdateMeReqBody, ParamSchema>,
     ['body']
+  )
+)
+
+export const followValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: followSchema
+    } as Record<keyof FollowReqBody, ParamSchema>,
+    ['body']
+  )
+)
+
+export const unFollowValidator = validate(
+  checkSchema(
+    {
+      followed_user_id: followSchema
+    } as Record<keyof FollowReqBody, ParamSchema>,
+    ['params']
   )
 )

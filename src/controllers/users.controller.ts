@@ -1,13 +1,15 @@
-import { Request, Response } from 'express'
+import { Request, Response, NextFunction } from 'express'
 import userService from '~/services/users.services'
-import { NextFunction, ParamsDictionary } from 'express-serve-static-core'
+import { ParamsDictionary } from 'express-serve-static-core'
 import {
+  FollowReqBody,
   ForgotPasswordReqBody,
   LoginReqBody,
   LogoutReqBody,
   RegisterReqBody,
   ResetPasswordValidator,
   TokenPayload,
+  UnFollowReqBody,
   UpdateMeReqBody,
   VerifyEmailReqBody,
   VerifyForgotPasswordReqBody
@@ -53,7 +55,7 @@ export const verifyEmailController = async (req: Request<ParamsDictionary, any, 
     return
   }
 
-  const result = await userService.verifyEmail(user_id)
+  const result = await userService.verifyEmail(new ObjectId(user_id))
   res.json({ message: USER_MESSAGES.EMAIL_VERIFY_SUCCESS, result })
   return
 }
@@ -72,7 +74,7 @@ export const resendVerifyEmailController = async (req: Request, res: Response, n
     return
   }
 
-  const result = await userService.resendVerifyEmail(user_id)
+  const result = await userService.resendVerifyEmail(new ObjectId(user_id))
   return res.json(result)
 }
 
@@ -105,15 +107,40 @@ export const resetPasswordController = async (
   return
 }
 
-export const meController = async (req: Request, res: Response) => {
-  const { user_id } = req.decode_authorization as TokenPayload
+export const getMeController = async (req: Request, res: Response) => {
+  const { user_id, verify } = req.decode_authorization as TokenPayload
+  console.log(verify)
   const user = await userService.getMe(user_id)
   res.json({ message: USER_MESSAGES.GET_ME_SUCCESS, result: user })
 }
 
-export const updateMeController = async (req: Request<ParamsDictionary, any, UpdateMeReqBody>, res: Response) => {
+export const updateGetMeController = async (req: Request<ParamsDictionary, any, UpdateMeReqBody>, res: Response) => {
   const { user_id } = req.decode_authorization as TokenPayload
-  const { body } = req
+
+  const body = req.body
   const user = await userService.updateMe(user_id, body)
   res.json({ message: USER_MESSAGES.UPDATE_ME_SUCCESS, user })
+}
+
+export const getProfileController = async (req: Request, res: Response) => {
+  const { username } = req.params
+  const user = await userService.getProfile(username)
+
+  res.json({ message: USER_MESSAGES.GET_PROFILE_SUCCESS, result: user })
+}
+
+export const followController = async (req: Request<ParamsDictionary, any, FollowReqBody>, res: Response) => {
+  const { user_id } = req.decode_authorization as TokenPayload
+  const { followed_user_id } = req.body
+  const result = await userService.followers(user_id, followed_user_id)
+  res.json({ result })
+  return
+}
+
+export const unFollowController = async (req: Request<UnFollowReqBody>, res: Response) => {
+  const { user_id } = req.decode_authorization as TokenPayload
+  const { followed_user_id } = req.params
+  const result = await userService.unFollowers(user_id, followed_user_id)
+  res.json({ result })
+  return
 }

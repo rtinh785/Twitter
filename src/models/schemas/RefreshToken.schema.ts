@@ -1,14 +1,16 @@
+import { ObjectId } from 'mongodb'
+
 interface RefreshTokenType {
   _id?: string
   token: string
-  user_id: string
+  user_id: ObjectId
   created_at?: Date
 }
 
 export default class RefreshToken {
   _id?: string
   token: string
-  user_id: string
+  user_id: ObjectId
   created_at: Date
 
   constructor(refreshToken: RefreshTokenType) {

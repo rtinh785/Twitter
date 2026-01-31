@@ -1,5 +1,4 @@
 import { Router } from 'express'
-
 import {
   verifyEmailController,
   loginController,
@@ -9,9 +8,13 @@ import {
   forgotPasswordController,
   verifyForgotPasswordController,
   resetPasswordController,
-  meController,
-  updateMeController
+  getMeController,
+  updateGetMeController,
+  getProfileController,
+  followController,
+  unFollowController
 } from '~/controllers/users.controller'
+import { filterMiddleware } from '~/middlewares/common.middleware'
 import {
   accessTokenValidator,
   verifyEmailTokenValidator,
@@ -22,8 +25,11 @@ import {
   verifyForgotPasswordValidator,
   resetPasswordValidator,
   verifiedUserValidator,
-  updateMeValidator
+  updateMeValidator,
+  followValidator,
+  unFollowValidator
 } from '~/middlewares/users.middleware'
+import { UpdateMeReqBody } from '~/models/request/User.request'
 import { wrapRequestHandler } from '~/utils/handlers'
 
 const usersRouter = Router()
@@ -40,13 +46,38 @@ usersRouter.post(
   wrapRequestHandler(verifyForgotPasswordController)
 )
 usersRouter.post('/reset-password', resetPasswordValidator, wrapRequestHandler(resetPasswordController))
-usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(meController))
+usersRouter.get('/me', accessTokenValidator, wrapRequestHandler(getMeController))
 usersRouter.patch(
   '/me',
   accessTokenValidator,
   verifiedUserValidator,
   updateMeValidator,
-  wrapRequestHandler(updateMeController)
+  filterMiddleware<UpdateMeReqBody>([
+    'name',
+    'date_of_birth',
+    'bio',
+    'avatar',
+    'cover_photo',
+    'location',
+    'website',
+    'username'
+  ]),
+  wrapRequestHandler(updateGetMeController)
+)
+usersRouter.get('/:username', wrapRequestHandler(getProfileController))
+usersRouter.post(
+  '/follow',
+  accessTokenValidator,
+  verifiedUserValidator,
+  followValidator,
+  wrapRequestHandler(followController)
+)
+usersRouter.delete(
+  '/follow/:followed_user_id',
+  accessTokenValidator,
+  verifiedUserValidator,
+  unFollowValidator,
+  wrapRequestHandler(unFollowController)
 )
 
 export default usersRouter
