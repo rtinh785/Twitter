@@ -35,6 +35,13 @@ export const loginController = async (req: Request<ParamsDictionary, any, LoginR
   return
 }
 
+export const oauthController = async (req: Request, res: Response) => {
+  const { code } = req.query
+  await userService.oauth(code as string)
+  res.json({ message: 'oauth' })
+  return
+}
+
 export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
   const { refresh_token } = req.body
 
