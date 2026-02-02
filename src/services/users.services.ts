@@ -11,6 +11,7 @@ import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import Follower from '~/models/schemas/Follow.schema'
 import axios from 'axios'
+import { verify } from 'crypto'
 
 type SignAccessTokenParams = {
   user_id: ObjectId
@@ -174,7 +175,7 @@ class UserService {
   async oauth(code: string) {
     const { id_token, access_token } = await this.getOauthGoogleToken(code)
     const userInfo = await this.getGoogleUserInfo(access_token, id_token)
-    console.log(userInfo)
+
     if (!userInfo.verified_email) {
       return new ErrorWithStatus({
         message: USER_MESSAGES.GMAIL_NOT_VERIFIED,
@@ -196,6 +197,18 @@ class UserService {
           user_id
         })
       )
+      return { access_token, refresh_token, newUser: 0, verify: user.verify }
+    } else {
+      const password_ramdom = Math.random().toString(36).substring(2, 15)
+      const date = new Date().toISOString()
+      const data = await this.register({
+        email: userInfo.email,
+        name: userInfo.name,
+        date_of_birth: date,
+        password: password_ramdom,
+        confirm_password: password_ramdom
+      })
+      return { ...data, newUser: 1, verify: UserVerifyStatus.Unverified }
     }
   }
 

@@ -17,5 +17,10 @@ declare namespace NodeJS {
     RERESH_TOKEN_EXPRIRES_IN: string
     EMAIL_VERIFY_TOKEN_EXPIRES_IN: string
     FORGOT_PASSWORD_TOKEN_EXPIRES_IN: string
+
+    GOOGLE_CLIENT_ID: string
+    GOOGLE_CLIENT_SECRET: string
+    GOOGLE_REDIRECT_URI: string
+    CLIENT_REDIRECT_CALLBACK: string
   }
 }
