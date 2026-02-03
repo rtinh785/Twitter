@@ -23,7 +23,7 @@ import { UserVerifyStatus } from '~/constants/enum'
 import { ErrorWithStatus } from '~/models/Errors'
 import { hashPassword } from '~/utils/crypto'
 import { config } from 'dotenv'
-import { verify } from 'crypto'
+
 config()
 
 export const registerController = async (req: Request<ParamsDictionary, any, RegisterReqBody>, res: Response) => {
@@ -134,14 +134,14 @@ export const getMeController = async (req: Request, res: Response) => {
 }
 
 export const updateGetMeController = async (req: Request<ParamsDictionary, any, UpdateMeReqBody>, res: Response) => {
-  const { user_id, verify } = req.decode_authorization as TokenPayload
+  const { user_id } = req.decode_authorization as TokenPayload
 
   const body = req.body
   const user = await userService.updateMe(user_id, body)
   res.json({ message: USER_MESSAGES.UPDATE_ME_SUCCESS, user })
 }
 
-export const getProfileController = async (req: Request, res: Response) => {
+export const getProfileController = async (req: Request<{ username: string | string[] }>, res: Response) => {
   const { username } = req.params
   const user = await userService.getProfile(username)
 

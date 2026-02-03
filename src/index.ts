@@ -1,5 +1,6 @@
 import express from 'express'
 import usersRouter from './routes/users.routes'
+import mediasRouter from './routes/medias.routes'
 import databaseService from './services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middleware'
 
@@ -7,5 +8,6 @@ databaseService.connect()
 const app = express()
 app.use(express.json())
 app.use('/users', usersRouter)
+app.use('/medias', mediasRouter)
 app.use(defaultErrorHandler)
 app.listen(4000)
