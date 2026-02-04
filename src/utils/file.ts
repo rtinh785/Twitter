@@ -15,12 +15,13 @@ export const getNameFromFullName = (fullName: string) => {
   return nameArr.join('')
 }
 
-export const handleUploadSingleImage = async (req: Request) => {
+export const handleUploadImages = async (req: Request) => {
   const form = formidable({
     uploadDir: UPLOAD_TEMP_DIR,
-    maxFiles: 1,
+    maxFiles: 4,
     keepExtensions: true,
     maxFieldsSize: 300 * 1024, //300KB
+    maxTotalFileSize: 300 * 1024 * 4,
     filter: function ({ name, mimetype }) {
       const isValid = name === 'image' && Boolean(mimetype?.includes('image/'))
       if (!isValid) {
