@@ -39,7 +39,9 @@ class MediasService {
     // await sharp(file.filepath).jpeg().toFile(newPath)
     // fs.unlinkSync(file.filepath)
     return {
-      url: isProduction ? `${process.env.HOST}/static/${newName}` : `http://localhost:4000/static/video/${newName}`,
+      url: isProduction
+        ? `${process.env.HOST}/static/${newName}`
+        : `http://localhost:4000/static/video-streaming/${newName}`,
       type: MediaType.Video
     }
   }
