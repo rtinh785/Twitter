@@ -4,20 +4,21 @@ import mediasRouter from './routes/medias.routes'
 import databaseService from './services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middleware'
 import { initFolder } from './utils/file'
-import { UPLOAD_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
+import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
+// import { UPLOAD_IMAGE_DIR } from './constants/dir'
 
 databaseService.connect()
 const app = express()
 const port = 4000
 
-// create uploads folder
+// create uploads folde
 initFolder()
 
 app.use(express.json())
 app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
 app.use('/static', staticRouter)
-// app.use('/static', express.static(UPLOAD_DIR))
+// app.use('/static/video', express.static(UPLOAD_VIDEO_TEMP_DIR))
 app.use(defaultErrorHandler)
 app.listen(port)

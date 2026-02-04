@@ -1,8 +1,8 @@
 import { Request } from 'express'
 import path from 'node:path'
 import sharp from 'sharp'
-import { UPLOAD_DIR } from '~/constants/dir'
-import { getNameFromFullName, handleUploadImages } from '~/utils/file'
+import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
+import { getNameFromFullName, handleUploadImages, handleUploadVideos } from '~/utils/file'
 import fs from 'fs'
 import { isProduction } from '~/constants/config'
 import { config } from 'dotenv'
@@ -15,7 +15,7 @@ class MediasService {
     const result: Media[] = await Promise.all(
       files.map(async (file) => {
         const newName = getNameFromFullName(file.newFilename)
-        const newPath = path.resolve(UPLOAD_DIR, `${newName}.jpg`)
+        const newPath = path.resolve(UPLOAD_IMAGE_DIR, `${newName}.jpg`)
         await sharp(file.filepath).jpeg().toFile(newPath)
         fs.unlinkSync(file.filepath)
         return {
@@ -27,6 +27,21 @@ class MediasService {
       })
     )
     return result
+  }
+
+  async handleUploadVideos(req: Request) {
+    const files = await handleUploadVideos(req)
+    const file = files[0]
+
+    const newName = file.newFilename
+
+    // const newPath = path.resolve(UPLOAD_VIDEO_DIR, `${newName}.jpg`)
+    // await sharp(file.filepath).jpeg().toFile(newPath)
+    // fs.unlinkSync(file.filepath)
+    return {
+      url: isProduction ? `${process.env.HOST}/static/${newName}` : `http://localhost:4000/static/video/${newName}`,
+      type: MediaType.Video
+    }
   }
 }
 
