@@ -1,9 +1,11 @@
 import { ObjectId } from 'mongodb'
+import { UserVerifyStatus } from '~/constants/enum'
 
 interface RefreshTokenType {
   _id?: string
   token: string
   user_id: ObjectId
+  verify: UserVerifyStatus
   created_at?: Date
 }
 

@@ -1,5 +1,4 @@
 import { User } from '~/models/schemas/User.schema'
-import databaseService from './database.services'
 import { LoginReqBody, RegisterReqBody, UpdateMeReqBody } from '~/models/request/User.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
@@ -11,7 +10,7 @@ import { ErrorWithStatus } from '~/models/Errors'
 import HTTP_STATUS from '~/constants/httpStatus'
 import Follower from '~/models/schemas/Follow.schema'
 import axios from 'axios'
-import { verify } from 'crypto'
+import databaseService from '~/services/database.services'
 
 type SignAccessTokenParams = {
   user_id: ObjectId
@@ -107,7 +106,8 @@ class UserService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         token: refresh_token,
-        user_id: user_id
+        user_id: user_id,
+        verify: UserVerifyStatus.Unverified
       })
     )
     return { access_token, refresh_token }
@@ -126,7 +126,8 @@ class UserService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         token: refresh_token,
-        user_id
+        user_id,
+        verify: user.verify
       })
     )
     return { access_token, refresh_token }
@@ -194,7 +195,8 @@ class UserService {
       await databaseService.refreshTokens.insertOne(
         new RefreshToken({
           token: refresh_token,
-          user_id
+          user_id,
+          verify: user.verify
         })
       )
       return { access_token, refresh_token, newUser: 0, verify: user.verify }
@@ -215,6 +217,22 @@ class UserService {
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token })
     return USER_MESSAGES.LOGOUT_SUCCESS
+  }
+
+  async refreshToken(user_id: ObjectId, verify: UserVerifyStatus, old_refresh_token: string) {
+    const [token] = await Promise.all([
+      await this.signAccessTokenAndRefreshToken({ user_id, verify }),
+      await databaseService.refreshTokens.deleteOne({ token: old_refresh_token })
+    ])
+    const [access_token, refresh_token] = token
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        token: refresh_token,
+        user_id,
+        verify
+      })
+    )
+    return { access_token, refresh_token }
   }
 
   async verifyEmail(user_id: ObjectId) {
@@ -239,7 +257,8 @@ class UserService {
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         user_id,
-        token: refresh_token
+        token: refresh_token,
+        verify: UserVerifyStatus.Verified
       })
     )
     return {
