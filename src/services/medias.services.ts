@@ -1,7 +1,7 @@
 import { Request } from 'express'
 import path from 'node:path'
 import sharp from 'sharp'
-import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
+import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
 import { getNameFromFullName, handleUploadImages, handleUploadVideos } from '~/utils/file'
 import fs from 'fs'
 import { isProduction } from '~/constants/config'

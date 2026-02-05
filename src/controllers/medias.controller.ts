@@ -34,11 +34,54 @@ export const uploadVideosController = async (req: Request, res: Response) => {
   })
 }
 
+export const serverVideoStreamController = (req: Request<{ name: string }>, res: Response, next: NextFunction) => {
+  const range = req.headers.range
+  if (!range) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).send('Requires Range header')
+  }
+
+  const { name } = req.params
+  const videoPath = path.resolve(UPLOAD_VIDEO_TEMP_DIR, name)
+
+  // 1MB = 10^6 bytes (Tính theo hệ 10, đây là thứ mà chúng ta hay thấy trên UI)
+  // Còn nếu tính theo hệ nhị phân thì 1MB = 2^20 bytes (1024 * 1024)
+
+  // Dung lượng video (bytes)
+  const videoSize = fs.statSync(videoPath).size
+
+  // Dung lượng video cho mỗi phân đoạn stream
+  const chunkSize = 10 ** 6 // 1MB
+
+  // Lấy giá trị byte bắt đầu từ header Range (vd: bytes=1048576-)
+  const start = Number(range.replace(/\D/g, ''))
+
+  // Lấy giá trị byte kết thúc, vượt quá dung lượng video thì lấy giá trị videoSize
+  const end = Math.min(start + chunkSize, videoSize)
+
+  // Dung lượng thực tế cho mỗi đoạn video stream
+  // Thường đây sẽ là chunkSize, ngoại trừ đoạn cuối cùng
+  const contentLength = end - start
+
+  const contentType = mime.getType(videoPath) || 'video/*'
+
+  const headers = {
+    'Content-Range': `bytes ${start}-${end}/${videoSize}`,
+    'Accept-Ranges': 'bytes',
+    'Content-Length': contentLength,
+    'Content-Type': contentType
+  }
+
+  res.writeHead(HTTP_STATUS.PARTIAL_CONTENT, headers)
+
+  const videoStreams = fs.createReadStream(videoPath, { start, end })
+  videoStreams.pipe(res)
+}
+
 // export const serverVideoStreamController = (req: Request<{ name: string }>, res: Response, next: NextFunction) => {
 //   try {
 //     const range = req.headers.range
 //     if (!range) {
-//       return res.status(400).send('Requires Range header')
+//       return res.status(HTTP_STATUS.BAD_REQUEST).send('Requires Range header')
 //     }
 
 //     const { name } = req.params
@@ -47,40 +90,28 @@ export const uploadVideosController = async (req: Request, res: Response) => {
 //     const videoSize = fs.statSync(videoPath).size
 
 //     // Parse range: "bytes=start-end"
-//     const parts = range.replace(/bytes=/, '').split('-')
-//     const start = parseInt(parts[0], 10)
-//     const end = parts[1] ? parseInt(parts[1], 10) : videoSize - 1
+//     const CHUNK_SIZE = 10 ** 6 // 1MB
+//     const start = Number(range.replace(/\D/g, ''))
+//     const end = Math.min(start + CHUNK_SIZE, videoSize - 1)
 
-//     if (start >= videoSize) {
-//       return res.status(416).send('Requested range not satisfiable')
-//     }
-
+//     // Create headers
 //     const contentLength = end - start + 1
-//     const contentType = mime.getType(videoPath) || 'video/mp4'
-
-//     res.writeHead(206, {
+//     const headers = {
 //       'Content-Range': `bytes ${start}-${end}/${videoSize}`,
 //       'Accept-Ranges': 'bytes',
 //       'Content-Length': contentLength,
-//       'Content-Type': contentType
-//     })
+//       'Content-Type': 'video/mp4'
+//     }
 
-//     const stream = fs.createReadStream(videoPath, { start, end })
-//     stream.pipe(res)
+//     // HTTP Status 206 for Partial Content
+//     res.writeHead(206, headers)
+
+//     // create video read stream for this particular chunk
+//     const videoStream = fs.createReadStream(videoPath, { start, end })
+
+//     // Stream the video chunk to the client
+//     videoStream.pipe(res)
 //   } catch (err) {
 //     next(err)
 //   }
 // }
-
-export const serverVideoStreamController = (req: Request<{ name: string }>, res: Response, next: NextFunction) => {
-  const { name } = req.params
-
-  res.sendFile(path.resolve(UPLOAD_VIDEO_TEMP_DIR, name), (err) => {
-    if (err) {
-      console.error(err)
-      if (!res.headersSent) {
-        res.sendStatus(404)
-      }
-    }
-  })
-}
