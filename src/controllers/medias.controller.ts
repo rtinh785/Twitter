@@ -56,11 +56,11 @@ export const serverVideoStreamController = (req: Request<{ name: string }>, res:
   const start = Number(range.replace(/\D/g, ''))
 
   // Lấy giá trị byte kết thúc, vượt quá dung lượng video thì lấy giá trị videoSize
-  const end = Math.min(start + chunkSize, videoSize)
+  const end = Math.min(start + chunkSize, videoSize - 1)
 
   // Dung lượng thực tế cho mỗi đoạn video stream
   // Thường đây sẽ là chunkSize, ngoại trừ đoạn cuối cùng
-  const contentLength = end - start
+  const contentLength = end - start + 1
 
   const contentType = mime.getType(videoPath) || 'video/*'
 
@@ -76,42 +76,3 @@ export const serverVideoStreamController = (req: Request<{ name: string }>, res:
   const videoStreams = fs.createReadStream(videoPath, { start, end })
   videoStreams.pipe(res)
 }
-
-// export const serverVideoStreamController = (req: Request<{ name: string }>, res: Response, next: NextFunction) => {
-//   try {
-//     const range = req.headers.range
-//     if (!range) {
-//       return res.status(HTTP_STATUS.BAD_REQUEST).send('Requires Range header')
-//     }
-
-//     const { name } = req.params
-//     const videoPath = path.resolve(UPLOAD_VIDEO_TEMP_DIR, name)
-
-//     const videoSize = fs.statSync(videoPath).size
-
-//     // Parse range: "bytes=start-end"
-//     const CHUNK_SIZE = 10 ** 6 // 1MB
-//     const start = Number(range.replace(/\D/g, ''))
-//     const end = Math.min(start + CHUNK_SIZE, videoSize - 1)
-
-//     // Create headers
-//     const contentLength = end - start + 1
-//     const headers = {
-//       'Content-Range': `bytes ${start}-${end}/${videoSize}`,
-//       'Accept-Ranges': 'bytes',
-//       'Content-Length': contentLength,
-//       'Content-Type': 'video/mp4'
-//     }
-
-//     // HTTP Status 206 for Partial Content
-//     res.writeHead(206, headers)
-
-//     // create video read stream for this particular chunk
-//     const videoStream = fs.createReadStream(videoPath, { start, end })
-
-//     // Stream the video chunk to the client
-//     videoStream.pipe(res)
-//   } catch (err) {
-//     next(err)
-//   }
-// }
