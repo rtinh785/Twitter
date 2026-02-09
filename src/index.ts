@@ -8,7 +8,11 @@ import staticRouter from './routes/static.routes'
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
 
-databaseService.connect().then(() => databaseService.indexUser())
+databaseService.connect().then(() => {
+  databaseService.indexUser()
+  databaseService.indexRefreshToken()
+  databaseService.indexFollower()
+})
 const app = express()
 const port = 4000
 
