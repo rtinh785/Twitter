@@ -5,6 +5,7 @@ import databaseService from './services/database.services'
 import { defaultErrorHandler } from './middlewares/error.middleware'
 import { initFolder } from './utils/file'
 import staticRouter from './routes/static.routes'
+import tweetsRouter from './routes/tweets.routes'
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
 
@@ -22,6 +23,7 @@ initFolder()
 app.use(express.json())
 app.use('/users', usersRouter)
 app.use('/medias', mediasRouter)
+app.use('/tweets', tweetsRouter)
 app.use('/static', staticRouter)
 // app.use('/static/video', express.static(UPLOAD_VIDEO_TEMP_DIR))
 app.use(defaultErrorHandler)
