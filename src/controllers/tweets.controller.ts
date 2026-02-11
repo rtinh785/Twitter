@@ -1,8 +1,13 @@
-import { Request, Response, NextFunction } from 'express'
+import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
+import { ObjectId } from 'mongodb'
 import { TweetRequestBody } from '~/models/request/Tweet.request'
+import { TokenPayload } from '~/models/request/User.request'
+import tweetService from '~/services/tweets.services'
 
 export const createTweetController = async (req: Request<ParamsDictionary, any, TweetRequestBody>, res: Response) => {
-  res.json({ message: 'createTweetController' })
+  const { user_id } = req.decode_authorization as TokenPayload
+  const result = await tweetService.creaTweet(req.body, new ObjectId(user_id))
+  res.json({ message: 'Create Tweet successfully', result })
   return
 }

@@ -1,26 +1,26 @@
-import { checkSchema, ParamSchema } from 'express-validator'
+import { checkSchema } from 'express-validator'
 import { isEmpty } from 'lodash'
 import { ObjectId } from 'mongodb'
-import { TweetAudience, TweetType } from '~/constants/enum'
+import { MediaType, TweetAudience, TweetType } from '~/constants/enum'
 import { TWEETS_MESSAGES } from '~/constants/messages'
-import { TweetRequestBody } from '~/models/request/Tweet.request'
 import { numberEnumToArray } from '~/utils/common'
 import { validate } from '~/utils/validation'
 
 const tweetType = numberEnumToArray(TweetType)
 const tweetAudience = numberEnumToArray(TweetAudience)
+const mediaTypes = numberEnumToArray(MediaType)
 export const tweetValidator = validate(
   checkSchema(
     {
       type: {
         isIn: {
-          options: tweetType,
+          options: [tweetType],
           errorMessage: TWEETS_MESSAGES.INVALID_TYPE
         }
       },
       audience: {
         isIn: {
-          options: tweetAudience,
+          options: [tweetAudience],
           errorMessage: TWEETS_MESSAGES.INVALID_AUDIENCE
         }
       },

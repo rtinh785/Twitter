@@ -6,6 +6,8 @@ declare namespace NodeJS {
     DB_USERS_COLLECTION: string
     DB_REFRESH_TOKENS_COLLECTION: string
     DB_FOLLOWERS_COLLECTION: string
+    DB_TWEET_COLLECTION: string
+    DB_HASHTAG_COLLECTION: stringg
     HASH_PASSWORD_SECRET: string
 
     JWT_SECRET_ACCESS_TOKEN: string
