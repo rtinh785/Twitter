@@ -5,6 +5,8 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Follower from '~/models/schemas/Follow.schema'
 import Tweet from '~/models/schemas/Tweet.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
+import Bookmark from '~/models/schemas/Bookmark.schema'
+import { Like } from '~/models/schemas/Like.schema'
 
 config()
 
@@ -47,6 +49,14 @@ class DatabaseService {
 
   get hashtags(): Collection<Hashtag> {
     return this.db.collection(process.env.DB_HASHTAG_COLLECTION)
+  }
+
+  get bookmark(): Collection<Bookmark> {
+    return this.db.collection(process.env.DB_BOOKMARK_COLLECTION)
+  }
+
+  get like(): Collection<Like> {
+    return this.db.collection(process.env.DB_LIKE_COLLECTION)
   }
 
   async indexUser() {

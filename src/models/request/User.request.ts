@@ -62,7 +62,7 @@ export interface FollowReqBody {
   followed_user_id: string
 }
 
-export interface UnFollowReqBody extends ParamsDictionary {
+export interface UnFollowReqParam extends ParamsDictionary {
   followed_user_id: string
 }
 

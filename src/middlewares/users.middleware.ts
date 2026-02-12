@@ -18,7 +18,7 @@ import {
 } from '~/models/request/User.request'
 import databaseService from '~/services/database.services'
 import { JsonWebTokenError } from 'jsonwebtoken'
-import { NextFunction, Response, Request } from 'express'
+import { NextFunction, Response, Request, RequestHandler } from 'express'
 import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/constants/enum'
 import { REGEX_USERNAME } from '~/constants/regex'
@@ -510,3 +510,12 @@ export const changePasswordValidator = validate(
     ['body']
   )
 )
+
+export const isUserLoggedInValidator = (middleware: RequestHandler) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers.authorization) {
+      return middleware(req, res, next)
+    }
+    next()
+  }
+}
