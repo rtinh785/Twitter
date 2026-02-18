@@ -3,6 +3,7 @@ import databaseService from './database.services'
 import Tweet from '~/models/schemas/Tweet.schema'
 import { ObjectId, WithId } from 'mongodb'
 import Hashtag from '~/models/schemas/Hashtag.schema'
+import { TweetType } from '~/constants/enum'
 
 class TweetService {
   async checkAndCreateHashtag(hashtags: string[]) {
@@ -25,7 +26,7 @@ class TweetService {
 
   async creaTweet(body: TweetRequestBody, user_id: ObjectId) {
     const hashtags = await this.checkAndCreateHashtag(body.hashtags)
-    const result = await databaseService.tweet.insertOne(
+    const result = await databaseService.tweets.insertOne(
       new Tweet({
         user_id: user_id,
         type: body.type,
@@ -37,8 +38,185 @@ class TweetService {
         parent_id: body.parent_id
       })
     )
-    const tweet = await databaseService.tweet.findOne({ _id: result.insertedId })
+    const tweet = await databaseService.tweets.findOne({ _id: result.insertedId })
     return tweet
+  }
+
+  async increaseView(tweet_id: ObjectId, user_id?: ObjectId) {
+    const result = await databaseService.tweets.findOneAndUpdate(
+      {
+        _id: tweet_id
+      },
+      {
+        $inc: user_id ? { user_views: 1 } : { guest_views: 1 },
+        $currentDate: {
+          updated_at: true
+        }
+      },
+      {
+        returnDocument: 'after',
+        projection: {
+          user_views: 1,
+          guest_views: 1,
+          updated_at: 1
+        }
+      }
+    )
+    return result as WithId<{
+      user_views: number
+      guest_views: number
+      updated_at: Date
+    }>
+  }
+
+  async getTweetChildrenController({
+    tweet_id,
+    tweet_type,
+    limit,
+    page,
+    user_id
+  }: {
+    tweet_id: string
+    tweet_type: TweetType
+    limit: number
+    page: number
+    user_id?: string
+  }) {
+    const tweets = await databaseService.tweets
+      .aggregate<Tweet>([
+        {
+          $match: {
+            parent_id: new ObjectId(tweet_id),
+            type: tweet_type
+          }
+        },
+        {
+          $lookup: {
+            from: 'hashtags',
+            localField: 'hashtags',
+            foreignField: '_id',
+            as: 'hashtags'
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'mentions',
+            foreignField: '_id',
+            as: 'mentions'
+          }
+        },
+        {
+          $project: {
+            'mentions.password': 0
+          }
+        },
+        {
+          $lookup: {
+            from: 'bookmarks',
+            localField: '_id',
+            foreignField: 'tweet_id',
+            as: 'bookmarks'
+          }
+        },
+        {
+          $lookup: {
+            from: 'likes',
+            localField: '_id',
+            foreignField: 'tweet_id',
+            as: 'likes'
+          }
+        },
+        {
+          $lookup: {
+            from: 'tweets',
+            localField: '_id',
+            foreignField: 'parent_id',
+            as: 'tweets_children'
+          }
+        },
+        {
+          $addFields: {
+            bookmarks: {
+              $size: '$bookmarks'
+            },
+            likes: {
+              $size: '$likes'
+            },
+            retweet_count: {
+              $size: {
+                $filter: {
+                  input: '$tweets_children',
+                  as: 'retweet',
+                  cond: {
+                    $eq: ['$$retweet.type', TweetType.Retweet]
+                  }
+                }
+              }
+            },
+            comment_count: {
+              $size: {
+                $filter: {
+                  input: '$tweets_children',
+                  as: 'retweet',
+                  cond: {
+                    $eq: ['$$retweet.type', TweetType.Comment]
+                  }
+                }
+              }
+            },
+            quote_count: {
+              $size: {
+                $filter: {
+                  input: '$tweets_children',
+                  as: 'retweet',
+                  cond: {
+                    $eq: ['$$retweet.type', TweetType.QuoteTweet]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          $skip: limit * (page - 1)
+        },
+        {
+          $limit: limit
+        }
+      ])
+      .toArray()
+
+    const date = new Date()
+    const ids = tweets.map((tweet) => tweet._id as ObjectId)
+    const haha = await databaseService.tweets.updateMany(
+      {
+        _id: {
+          $in: ids
+        }
+      },
+      {
+        $inc: user_id ? { user_views: 1 } : { guest_views: 1 },
+        $set: {
+          updated_at: date
+        }
+      }
+    )
+
+    tweets.forEach((tweet) => {
+      tweet.updated_at = date
+      if (user_id) {
+        tweet.user_views += 1
+      } else {
+        tweet.guest_views += 1
+      }
+    })
+
+    const total = await databaseService.tweets.countDocuments({
+      parent_id: new ObjectId(tweet_id),
+      type: tweet_type
+    })
+    return { tweets, total }
   }
 }
 

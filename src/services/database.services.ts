@@ -43,7 +43,7 @@ class DatabaseService {
     return this.db.collection(process.env.DB_FOLLOWERS_COLLECTION!)
   }
 
-  get tweet(): Collection<Tweet> {
+  get tweets(): Collection<Tweet> {
     return this.db.collection(process.env.DB_TWEET_COLLECTION!)
   }
 
