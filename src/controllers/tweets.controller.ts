@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { ObjectId, WithId } from 'mongodb'
 import { TweetType } from '~/constants/enum'
-import { TweetIdReqParam, TweetQueryType, TweetRequestBody } from '~/models/request/Tweet.request'
+import { Pagination, TweetIdReqParam, TweetQueryType, TweetRequestBody } from '~/models/request/Tweet.request'
 import { TokenPayload } from '~/models/request/User.request'
 import Tweet from '~/models/schemas/Tweet.schema'
 
@@ -44,7 +44,7 @@ export const getTweetChildrenController = async (
 
   const { user_id } = req.decode_authorization ? (req.decode_authorization as TokenPayload) : {}
 
-  const { total, tweets } = await tweetService.getTweetChildrenController({
+  const { total, tweets } = await tweetService.getTweetChildren({
     tweet_id,
     tweet_type: tweetTypeNumber,
     limit: limitNumber,
@@ -54,6 +54,24 @@ export const getTweetChildrenController = async (
   res.json({
     message: 'Get Tweet Children successfully',
     result: { tweets, tweet_type, limit, page, total_page: Math.ceil(total / limitNumber) }
+  })
+  return
+}
+
+export const getNewFeedsController = async (req: Request<ParamsDictionary, any, any, Pagination>, res: Response) => {
+  const { user_id } = req.decode_authorization as TokenPayload
+  const { limit, page } = req.query
+  const result = await tweetService.getNewFeeds({
+    user_id: new ObjectId(user_id),
+    limit: Number(limit),
+    page: Number(page)
+  })
+  res.json({
+    message: 'Get New Feeds Successfully',
+    result: result.tweets,
+    limit,
+    page,
+    total_page: Math.ceil(result.total / Number(limit))
   })
   return
 }
