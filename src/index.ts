@@ -8,6 +8,7 @@ import staticRouter from './routes/static.routes'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarkRouter from './routes/bookmark.routes'
 import likeRouter from './routes/like.routes'
+import searchRouter from './routes/search.routes'
 
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
@@ -30,6 +31,8 @@ app.use('/tweets', tweetsRouter)
 app.use('/bookmarks', bookmarkRouter)
 app.use('/like', likeRouter)
 app.use('/static', staticRouter)
+app.use('/search', searchRouter)
 // app.use('/static/video', express.static(UPLOAD_VIDEO_TEMP_DIR))
+
 app.use(defaultErrorHandler)
 app.listen(port)
