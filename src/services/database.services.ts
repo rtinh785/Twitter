@@ -88,6 +88,12 @@ class DatabaseService {
       await this.refreshTokens.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
     }
   }
+
+  async indexTweets() {
+    if (!(await this.tweets.indexExists('content_text'))) {
+      await this.tweets.createIndex({ content: 'text' }, { default_language: 'none' })
+    }
+  }
 }
 
 const databaseService = new DatabaseService()

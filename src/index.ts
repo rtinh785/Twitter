@@ -17,6 +17,7 @@ databaseService.connect().then(() => {
   databaseService.indexUser()
   databaseService.indexRefreshToken()
   databaseService.indexFollower()
+  databaseService.indexTweets()
 })
 const app = express()
 const port = 4000

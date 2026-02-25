@@ -383,14 +383,7 @@ class TweetService {
               }
             }
           },
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'user_id',
-              foreignField: '_id',
-              as: 'user'
-            }
-          },
+
           {
             $match: {
               $or: [
@@ -418,6 +411,7 @@ class TweetService {
         ])
         .toArray()
     ])
+
     const tweet_ids = tweets.map((tweet) => tweet._id as ObjectId)
     const date = new Date()
 
@@ -439,6 +433,7 @@ class TweetService {
       tweet.user_views += 1
       tweet.updated_at = date
     })
+
     return {
       tweets,
       total: total[0].total
