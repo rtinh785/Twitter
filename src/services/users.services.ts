@@ -11,6 +11,7 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import Follower from '~/models/schemas/Follow.schema'
 import axios from 'axios'
 import databaseService from '~/services/database.services'
+import { sendEmail } from './email.services'
 
 type SignAccessTokenParams = {
   user_id: ObjectId
@@ -104,6 +105,18 @@ class UserService {
       user_id,
       verify: UserVerifyStatus.Unverified
     })
+
+    // SEND EMAIL VERIFY
+    try {
+      await sendEmail(payload.email, email_verify_token)
+    } catch (error) {
+      console.error('Error sending verify email:', error)
+      throw new ErrorWithStatus({
+        message: USER_MESSAGES.SEND_VERIFY_EMAIL_FAILED,
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
+    }
+
     await databaseService.users.insertOne(
       new User({
         ...payload,
@@ -114,7 +127,7 @@ class UserService {
         password: hashPassword(payload.password)
       })
     )
-    console.log(`Email verify token: ${email_verify_token}`)
+
     const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken({
       user_id,
       verify: UserVerifyStatus.Unverified
@@ -306,7 +319,21 @@ class UserService {
       user_id,
       verify: UserVerifyStatus.Unverified
     })
-    console.log(`Resend email verify token:`, email_verify_token)
+
+    const user = await databaseService.users.findOne({
+      _id: user_id
+    })
+
+    // SEND EMAIL VERIFY
+    try {
+      await sendEmail(user?.email as string, email_verify_token)
+    } catch (error) {
+      throw new ErrorWithStatus({
+        message: USER_MESSAGES.SEND_VERIFY_EMAIL_FAILED,
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
+    }
+
     await databaseService.users.updateOne(
       {
         _id: new ObjectId(user_id)
@@ -332,6 +359,16 @@ class UserService {
       verify: user.verify
     })
 
+    // SEND EMAIL VERIFY
+    try {
+      await sendEmail(email as string, forgot_password_token, true)
+    } catch (error) {
+      throw new ErrorWithStatus({
+        message: USER_MESSAGES.SEND_VERIFY_EMAIL_FAILED,
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
+    }
+
     await databaseService.users.updateOne(
       { _id: new ObjectId(user_id) },
       {
@@ -341,8 +378,6 @@ class UserService {
         $currentDate: { updated_at: true }
       }
     )
-
-    console.log(`Forgot password token:`, forgot_password_token)
 
     return {
       message: USER_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD

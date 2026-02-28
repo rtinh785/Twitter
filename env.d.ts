@@ -17,6 +17,9 @@ declare namespace NodeJS {
     JWT_SECRET_EMAIL_TOKEN: string
     JWT_SECRET_FORGOT_PASSWORD_TOKEN: string
 
+    RESEND_API_KEY: string
+    URL_CLIENT_HOST: string
+
     ACCESS_TOKEN_EXPRIRES_IN: string
     RERESH_TOKEN_EXPRIRES_IN: string
     EMAIL_VERIFY_TOKEN_EXPIRES_IN: string
