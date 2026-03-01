@@ -110,10 +110,9 @@ class UserService {
     try {
       await sendEmail(payload.email, email_verify_token)
     } catch (error) {
-      console.error('Error sending verify email:', error)
       throw new ErrorWithStatus({
-        message: USER_MESSAGES.SEND_VERIFY_EMAIL_FAILED,
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+        message: (error as any).message,
+        status: (error as any).statusCode
       })
     }
 
@@ -329,8 +328,8 @@ class UserService {
       await sendEmail(user?.email as string, email_verify_token)
     } catch (error) {
       throw new ErrorWithStatus({
-        message: USER_MESSAGES.SEND_VERIFY_EMAIL_FAILED,
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+        message: (error as any).message,
+        status: (error as any).statusCode
       })
     }
 
@@ -364,8 +363,8 @@ class UserService {
       await sendEmail(email as string, forgot_password_token, true)
     } catch (error) {
       throw new ErrorWithStatus({
-        message: USER_MESSAGES.SEND_VERIFY_EMAIL_FAILED,
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+        message: (error as any).message,
+        status: (error as any).statusCode
       })
     }
 

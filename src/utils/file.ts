@@ -11,6 +11,7 @@ export const initFolder = () => {
   })
 }
 
+// de tranh trung ten
 export const getNameFromFullName = (fullName: string) => {
   const nameArr = fullName.split('.')
   nameArr.pop()
@@ -23,6 +24,7 @@ export const getExtension = (filename: string) => {
 }
 
 export const handleUploadImages = async (req: Request) => {
+  // doc file tu request, luu tam thoi vao thu muc temp
   const form = formidable({
     uploadDir: UPLOAD_IMAGE_TEMP_DIR,
     maxFiles: 4,
@@ -75,6 +77,7 @@ export const handleUploadVideos = async (req: Request) => {
       videos.forEach((video) => {
         const ex = getExtension(video.originalFilename as string)
         fs.renameSync(video.filepath, video.filepath + '.' + ex)
+        video.filepath = video.filepath + '.' + ex
         video.newFilename = video.newFilename + '.' + ex
       })
 

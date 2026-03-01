@@ -68,8 +68,7 @@ export const USER_MESSAGES = {
   UPLOAD_SUCCESS: 'Upload success',
   REFRESH_TOKEN_SUCCESS: 'Refresh token success',
   GET_VIDEO_STATUS_SUCCESS: 'Get video status success',
-  FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid',
-  SEND_VERIFY_EMAIL_FAILED: 'Send verify email failed'
+  FORGOT_PASSWORD_TOKEN_IS_INVALID: 'Forgot password token is invalid'
 } as const
 
 export const TWEETS_MESSAGES = {

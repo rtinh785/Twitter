@@ -9,6 +9,7 @@ import tweetsRouter from './routes/tweets.routes'
 import bookmarkRouter from './routes/bookmark.routes'
 import likeRouter from './routes/like.routes'
 import searchRouter from './routes/search.routes'
+import supabase from './services/supabase.services'
 
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
@@ -21,6 +22,10 @@ databaseService.connect().then(() => {
 })
 const app = express()
 const port = 4000
+
+supabase.storage.listBuckets().then((data) => {
+  console.log('Connected to Supabase', data)
+})
 
 // create uploads folde
 initFolder()
