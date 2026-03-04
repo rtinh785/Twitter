@@ -113,6 +113,7 @@ const imageUrlSchema: ParamSchema = {
 const followSchema: ParamSchema = {
   custom: {
     options: async (values: string, { req }) => {
+      console.log(values)
       if (!ObjectId.isValid(values)) {
         throw new ErrorWithStatus({
           message: USER_MESSAGES.INVALID_USER_ID,
@@ -496,6 +497,14 @@ export const unFollowValidator = validate(
     {
       followed_user_id: followSchema
     } as Record<keyof FollowReqBody, ParamSchema>,
+    ['params']
+  )
+)
+export const conversationValidator = validate(
+  checkSchema(
+    {
+      receiver_id: followSchema
+    },
     ['params']
   )
 )

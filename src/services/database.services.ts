@@ -7,6 +7,7 @@ import Tweet from '~/models/schemas/Tweet.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Bookmark from '~/models/schemas/Bookmark.schema'
 import { Like } from '~/models/schemas/Like.schema'
+import Conversation from '~/models/schemas/Conversations'
 
 config()
 
@@ -57,6 +58,10 @@ class DatabaseService {
 
   get like(): Collection<Like> {
     return this.db.collection(process.env.DB_LIKE_COLLECTION)
+  }
+
+  get conversations(): Collection<Conversation> {
+    return this.db.collection(process.env.DB_CONVERSATION_COLLECTION)
   }
 
   async indexUser() {
