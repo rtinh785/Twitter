@@ -15,6 +15,12 @@ import cors from 'cors'
 import Conversation from './models/schemas/Conversations'
 import conversationRouter from './routes/conversation.routes'
 import { ObjectId } from 'mongodb'
+import { verifyAccessToken } from './utils/common'
+import { UserVerifyStatus } from './constants/enum'
+import { TokenPayload } from './models/request/User.request'
+import { ErrorWithStatus } from './models/Errors'
+import { USER_MESSAGES } from './constants/messages'
+import HTTP_STATUS from './constants/httpStatus'
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
 
@@ -60,6 +66,26 @@ const io = new Server(httpServer, {
 })
 
 const users: any = {}
+
+io.use(async (socket, next) => {
+  const { Authorization } = socket.handshake.auth
+  try {
+    const decode_authorization = await verifyAccessToken(Authorization)
+    const { verify } = decode_authorization as TokenPayload
+    if (verify !== UserVerifyStatus.Verified) {
+      throw new ErrorWithStatus({
+        message: USER_MESSAGES.USER_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    }
+  } catch (error) {
+    return next({
+      message: 'Unauthorized',
+      name: 'UnauthorizedError',
+      data: error
+    })
+  }
+})
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.auth._id

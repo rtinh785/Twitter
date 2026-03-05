@@ -22,6 +22,7 @@ import { NextFunction, Response, Request, RequestHandler } from 'express'
 import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/constants/enum'
 import { REGEX_USERNAME } from '~/constants/regex'
+import { verifyAccessToken } from '~/utils/common'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -223,26 +224,7 @@ export const accessTokenValidator = validate(
         custom: {
           options: async (value: string, { req }) => {
             const accestoken = (value || '').split(' ')[1]
-            if (!accestoken) {
-              throw new ErrorWithStatus({
-                message: USER_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
-                status: HTTP_STATUS.UNAUTHORIZED
-              })
-            }
-            try {
-              const decode_authorization = await verifyToken({
-                token: accestoken,
-                secretKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
-              })
-              ;(req as Request).decode_authorization = decode_authorization
-            } catch (error) {
-              throw new ErrorWithStatus({
-                message: USER_MESSAGES.ACCESS_TOKEN_IS_INVALID,
-                status: HTTP_STATUS.UNAUTHORIZED
-              })
-            }
-
-            return true
+            return await verifyAccessToken(accestoken, req as Request)
           }
         }
       }
