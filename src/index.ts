@@ -10,17 +10,11 @@ import bookmarkRouter from './routes/bookmark.routes'
 import likeRouter from './routes/like.routes'
 import searchRouter from './routes/search.routes'
 import { createServer } from 'http'
-import { Server } from 'socket.io'
 import cors from 'cors'
-import Conversation from './models/schemas/Conversations'
 import conversationRouter from './routes/conversation.routes'
-import { ObjectId } from 'mongodb'
-import { verifyAccessToken } from './utils/common'
-import { UserVerifyStatus } from './constants/enum'
-import { TokenPayload } from './models/request/User.request'
-import { ErrorWithStatus } from './models/Errors'
-import { USER_MESSAGES } from './constants/messages'
-import HTTP_STATUS from './constants/httpStatus'
+import { Server } from 'socket.io'
+import { ne } from '@faker-js/faker'
+import { initSocket } from './utils/socket'
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
 
@@ -65,62 +59,6 @@ const io = new Server(httpServer, {
   }
 })
 
-const users: any = {}
-
-io.use(async (socket, next) => {
-  const { Authorization } = socket.handshake.auth
-  try {
-    const decode_authorization = await verifyAccessToken(Authorization)
-    const { verify } = decode_authorization as TokenPayload
-    if (verify !== UserVerifyStatus.Verified) {
-      throw new ErrorWithStatus({
-        message: USER_MESSAGES.USER_NOT_VERIFIED,
-        status: HTTP_STATUS.FORBIDDEN
-      })
-    }
-  } catch (error) {
-    return next({
-      message: 'Unauthorized',
-      name: 'UnauthorizedError',
-      data: error
-    })
-  }
-})
-
-io.on('connection', (socket) => {
-  const userId = socket.handshake.auth._id
-
-  users[userId] = {
-    socketId: socket.id
-  }
-
-  socket.on('send_message', async (data: any) => {
-    const to = data.to
-
-    const user = users[to]
-
-    if (user) {
-      socket.to(user.socketId).emit('receive_message', {
-        content: data.content,
-        from: data.from
-      })
-
-      await databaseService.conversations.insertOne(
-        new Conversation({
-          sender_id: new ObjectId(data.from),
-          receiver_id: new ObjectId(data.to),
-          content: data.content
-        })
-      )
-    } else {
-      console.log('User not online')
-      return
-    }
-  })
-
-  socket.on('disconnect', () => {
-    delete users[userId]
-  })
-})
+initSocket(io)
 
 httpServer.listen(port)
