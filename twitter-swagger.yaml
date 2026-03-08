@@ -1,0 +1,302 @@
+openapi: 3.0.4
+info:
+  title: Twicher API
+  description: API documentation for Twicher backend
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000
+
+tags:
+  - name: Users
+  - name: Tweets
+  - name: Medias
+  - name: Bookmarks
+  - name: Like
+  - name: Search
+  - name: Conversation
+
+paths:
+  /users/register:
+    post:
+      tags: [Users]
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterReqBody'
+      responses:
+        200:
+          description: Register success
+
+  /users/login:
+    post:
+      tags: [Users]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginReqBody'
+      responses:
+        200:
+          description: Login success
+
+  /users/logout:
+    post:
+      tags: [Users]
+      summary: Logout
+      responses:
+        200:
+          description: Logout success
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user
+      responses:
+        200:
+          description: Success
+    patch:
+      tags: [Users]
+      summary: Update profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeReqBody'
+      responses:
+        200:
+          description: Updated
+
+  /users/{username}:
+    get:
+      tags: [Users]
+      summary: Get profile
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+
+  /tweets:
+    post:
+      tags: [Tweets]
+      summary: Create tweet
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TweetRequestBody'
+      responses:
+        200:
+          description: Tweet created
+
+    get:
+      tags: [Tweets]
+      summary: Get new feeds
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+
+  /tweets/{tweet_id}:
+    get:
+      tags: [Tweets]
+      summary: Get tweet detail
+      parameters:
+        - name: tweet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+
+  /tweets/{tweet_id}/children:
+    get:
+      tags: [Tweets]
+      summary: Get tweet children
+      parameters:
+        - name: tweet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+
+  /medias/upload-image:
+    post:
+      tags: [Medias]
+      summary: Upload images
+      responses:
+        200:
+          description: Upload success
+
+  /medias/upload-video:
+    post:
+      tags: [Medias]
+      summary: Upload video
+      responses:
+        200:
+          description: Upload success
+
+  /bookmarks:
+    post:
+      tags: [Bookmarks]
+      summary: Bookmark tweet
+      responses:
+        200:
+          description: Success
+
+  /bookmarks/{tweet_id}:
+    delete:
+      tags: [Bookmarks]
+      summary: Unbookmark tweet
+      parameters:
+        - name: tweet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+
+  /like:
+    post:
+      tags: [Like]
+      summary: Like tweet
+      responses:
+        200:
+          description: Success
+
+  /like/{tweet_id}:
+    delete:
+      tags: [Like]
+      summary: Unlike tweet
+      parameters:
+        - name: tweet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+
+  /search:
+    get:
+      tags: [Search]
+      summary: Advanced search
+      parameters:
+        - name: content
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Success
+
+  /conversations/receiver/{receiver_id}:
+    get:
+      tags: [Conversation]
+      summary: Get conversation
+      parameters:
+        - name: receiver_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+
+components:
+  schemas:
+    RegisterReqBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        confirm_password:
+          type: string
+        date_of_birth:
+          type: string
+
+    LoginReqBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    UpdateMeReqBody:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        location:
+          type: string
+        website:
+          type: string
+        username:
+          type: string
+        avatar:
+          type: string
+        cover_photo:
+          type: string
+
+    TweetRequestBody:
+      type: object
+      properties:
+        type:
+          type: integer
+        audience:
+          type: integer
+        content:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+        hashtags:
+          type: array
+          items:
+            type: string
+        mentions:
+          type: array
+          items:
+            type: string
