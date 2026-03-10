@@ -8,10 +8,11 @@ import Hashtag from '~/models/schemas/Hashtag.schema'
 import Bookmark from '~/models/schemas/Bookmark.schema'
 import { Like } from '~/models/schemas/Like.schema'
 import Conversation from '~/models/schemas/Conversations'
+import { envConfig } from '~/constants/config'
 
 config()
 
-const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@twitter.unkk2wy.mongodb.net/?appName=Twitter`
+const uri = `mongodb+srv://${envConfig.dbUsername}:${envConfig.dbPassword}@twitter.unkk2wy.mongodb.net/?appName=Twitter`
 
 class DatabaseService {
   private client: MongoClient
@@ -19,7 +20,7 @@ class DatabaseService {
 
   constructor() {
     this.client = new MongoClient(uri)
-    this.db = this.client.db(process.env.DB_NAME)
+    this.db = this.client.db(envConfig.dbName)
   }
 
   async connect() {
@@ -33,35 +34,35 @@ class DatabaseService {
   }
 
   get users(): Collection<User> {
-    return this.db.collection(process.env.DB_USERS_COLLECTION!)
+    return this.db.collection(envConfig.dbUsersCollection!)
   }
 
   get refreshTokens(): Collection<RefreshToken> {
-    return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION!)
+    return this.db.collection(envConfig.dbRefreshTokensCollection!)
   }
 
   get followers(): Collection<Follower> {
-    return this.db.collection(process.env.DB_FOLLOWERS_COLLECTION!)
+    return this.db.collection(envConfig.dbFollowersCollection!)
   }
 
   get tweets(): Collection<Tweet> {
-    return this.db.collection(process.env.DB_TWEET_COLLECTION!)
+    return this.db.collection(envConfig.dbTweetCollection!)
   }
 
   get hashtags(): Collection<Hashtag> {
-    return this.db.collection(process.env.DB_HASHTAG_COLLECTION)
+    return this.db.collection(envConfig.dbHashtagCollection!)
   }
 
   get bookmark(): Collection<Bookmark> {
-    return this.db.collection(process.env.DB_BOOKMARK_COLLECTION)
+    return this.db.collection(envConfig.dbBookmarkCollection!)
   }
 
   get like(): Collection<Like> {
-    return this.db.collection(process.env.DB_LIKE_COLLECTION)
+    return this.db.collection(envConfig.dbLikeCollection!)
   }
 
   get conversations(): Collection<Conversation> {
-    return this.db.collection(process.env.DB_CONVERSATION_COLLECTION)
+    return this.db.collection(envConfig.dbConversationCollection!)
   }
 
   async indexUser() {

@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import 'dotenv/config'
+import { envConfig } from '~/constants/config'
 
 export const getVerifyEmailTemplate = (token: string, resetPassword?: boolean) => {
   const templatePath = path.resolve('src/templates/verify-email.html')
@@ -10,7 +11,7 @@ export const getVerifyEmailTemplate = (token: string, resetPassword?: boolean) =
   const content = resetPassword
     ? 'Nhấn nút bên dưới để đặt lại mật khẩu của bạn'
     : 'Nhấn nút bên dưới để xác thực tài khoản của bạn'
-  const link = `${process.env.URL_CLIENT_HOST}/${resetPassword ? 'reset-password' : 'verify-email'}?token=${token}`
+  const link = `${envConfig.urlClientHost}/${resetPassword ? 'reset-password' : 'verify-email'}?token=${token}`
   const titleLink = resetPassword ? 'Đặt lại mật khẩu ngay' : 'Xác thực ngay'
 
   html = html

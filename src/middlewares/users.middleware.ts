@@ -23,6 +23,7 @@ import { ObjectId } from 'mongodb'
 import { UserVerifyStatus } from '~/constants/enum'
 import { REGEX_USERNAME } from '~/constants/regex'
 import { verifyAccessToken } from '~/utils/common'
+import { envConfig } from '~/constants/config'
 
 const forgotPasswordTokenSchema: ParamSchema = {
   trim: true,
@@ -37,7 +38,7 @@ const forgotPasswordTokenSchema: ParamSchema = {
       try {
         const decode_forgot_password_token = await verifyToken({
           token: value,
-          secretKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string
+          secretKey: envConfig.jwtSecretForgotPasswordToken as string
         })
         const { user_id } = decode_forgot_password_token as { user_id: string }
         const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
@@ -248,7 +249,7 @@ export const refreshTokenValidator = validate(
             }
             try {
               const [decode_refresh_token, refresh_token] = await Promise.all([
-                verifyToken({ token: value, secretKey: process.env.JWT_SECRET_REFRESH_TOKEN as string }),
+                verifyToken({ token: value, secretKey: envConfig.jwtSecretRefreshToken as string }),
                 databaseService.refreshTokens.findOne({ token: value })
               ])
 
@@ -294,7 +295,7 @@ export const verifyEmailTokenValidator = validate(
             try {
               const decode_email_verify_token = await verifyToken({
                 token: value,
-                secretKey: process.env.JWT_SECRET_EMAIL_TOKEN as string
+                secretKey: envConfig.jwtSecretEmailToken as string
               })
               ;(req as Request).decode_email_verify_token = decode_email_verify_token
             } catch (error) {

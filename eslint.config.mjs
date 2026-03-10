@@ -5,6 +5,9 @@ import eslintPluginPrettier from 'eslint-plugin-prettier'
 
 export default defineConfig([
   {
+    ignores: ['dist', 'node_modules']
+  },
+  {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
     plugins: { js },
     extends: ['js/recommended']
@@ -31,7 +34,6 @@ export default defineConfig([
           jsxSingleQuote: true
         }
       ]
-    },
-    ignores: ['**/node_modules/', '**/dist/']
+    }
   }
 ])

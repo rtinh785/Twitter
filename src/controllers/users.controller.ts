@@ -24,6 +24,7 @@ import { UserVerifyStatus } from '~/constants/enum'
 import { ErrorWithStatus } from '~/models/Errors'
 import { hashPassword } from '~/utils/crypto'
 import { config } from 'dotenv'
+import { envConfig } from '~/constants/config'
 
 config()
 
@@ -47,7 +48,7 @@ export const oauthController = async (req: Request, res: Response) => {
     newUser: number
     verify: UserVerifyStatus
   }
-  const urlRedirect = `${process.env.CLIENT_REDIRECT_CALLBACK}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&new_user=${result.newUser}&verify=${result.verify}`
+  const urlRedirect = `${envConfig.clientRedirectCallback}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&new_user=${result.newUser}&verify=${result.verify}`
   res.redirect(urlRedirect)
   return
 }

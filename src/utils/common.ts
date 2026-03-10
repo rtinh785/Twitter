@@ -3,6 +3,7 @@ import { USER_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/Errors'
 import { verifyToken } from './jwt'
 import { Request } from 'express'
+import { envConfig } from '~/constants/config'
 
 export const numberEnumToArray = (numberEnum: { [key: string]: string | number }) => {
   return Object.values(numberEnum).filter((value) => typeof value === 'number')
@@ -18,7 +19,7 @@ export const verifyAccessToken = async (accestoken: string, req?: Request) => {
   try {
     const decode_authorization = await verifyToken({
       token: accestoken,
-      secretKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+      secretKey: envConfig.jwtSecretAccessToken
     })
     if (req) {
       ;(req as Request).decode_authorization = decode_authorization
