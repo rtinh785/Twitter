@@ -69,6 +69,7 @@ usersRouter.patch(
   wrapRequestHandler(updateGetMeController)
 )
 usersRouter.get('/:username', wrapRequestHandler(getProfileController))
+
 usersRouter.post(
   '/follow',
   accessTokenValidator,

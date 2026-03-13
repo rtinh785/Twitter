@@ -17,10 +17,11 @@ tags:
   - name: Conversation
 
 paths:
+  # User endpoints
   /users/register:
     post:
       tags: [Users]
-      summary: Register
+      summary: Register account
       requestBody:
         required: true
         content:
@@ -30,6 +31,22 @@ paths:
       responses:
         200:
           description: Register success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Register success
+                  result:
+                    $ref: '#/components/schemas/SuccessResponse'
+        401:
+          description: Unauthorized
+        422:
+          description: Validation error
+        500:
+          description: Internal server error
 
   /users/login:
     post:
@@ -44,259 +61,960 @@ paths:
       responses:
         200:
           description: Login success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login success
+                  result:
+                    $ref: '#/components/schemas/SuccessResponse'
+        401:
+          description: Unauthorized
+        422:
+          description: Validation error
+        500:
+          description: Internal server error
 
   /users/logout:
     post:
       tags: [Users]
-      summary: Logout
+      summary: Logout account
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutReqBody'
       responses:
         200:
           description: Logout success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        401:
+          description: Unauthorized
+        422:
+          description: Validation error
+        500:
+          description: Internal server error
 
   /users/me:
     get:
       tags: [Users]
-      summary: Get current user
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
       responses:
         200:
-          description: Success
+          description: Get user information success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMeResponse'
+        401:
+          description: Unauthorized
+        500:
+          description: Internal server error
     patch:
       tags: [Users]
-      summary: Update profile
+      summary: Update my profile
+      description: Update current user profile information
+      security:
+        - BearerAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateMeReqBody'
       responses:
         200:
-          description: Updated
+          description: Update profile success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateMeResponse'
+        401:
+          description: Unauthorized
+        422:
+          description: Validation error
+        500:
+          description: Internal server error
+
+  /users/verify-email:
+    post:
+      tags: [Users]
+      summary: Verify email
+      description: Verify user email using email verify token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailReqBody'
+      responses:
+        200:
+          description: Email verify success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyEmailResponse'
+        401:
+          description: Email verify token is invalid or required
+        404:
+          description: User not found
+        500:
+          description: Internal server error
+
+  /users/resend-verify-email:
+    post:
+      tags: [Users]
+      summary: Resend verify email
+      description: Send a new email verification token to user's email
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerifyEmailReqBody'
+      responses:
+        200:
+          description: Resend email verify success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendVerifyEmailResponse'
+        401:
+          description: Unauthorized
+        404:
+          description: User not found
+        500:
+          description: Internal server error
 
   /users/{username}:
     get:
       tags: [Users]
-      summary: Get profile
+      summary: Get user profile
+      description: Get public profile of a user by username
       parameters:
         - name: username
           in: path
           required: true
+          description: Username of the user
           schema:
             type: string
+            example: user69b3b6f2353d6f522bb541b7
       responses:
         200:
-          description: Success
+          description: Get profile success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProfileResponse'
+        404:
+          description: User not found
+        500:
+          description: Internal server error
 
-  /tweets:
+  /users/refresh-token:
     post:
-      tags: [Tweets]
-      summary: Create tweet
+      tags: [Users]
+      summary: Refresh access token
+      description: Generate new access token and refresh token using refresh token
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TweetRequestBody'
+              $ref: '#/components/schemas/RefreshTokenReqBody'
       responses:
         200:
-          description: Tweet created
+          description: Refresh token success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+        401:
+          description: Refresh token is invalid or expired
+        500:
+          description: Internal server error
 
+  /users/oauth/google:
     get:
-      tags: [Tweets]
-      summary: Get new feeds
+      summary: Google OAuth callback
+      description: Google will redirect to this endpoint with authorization code
       parameters:
-        - name: limit
-          in: query
-          schema:
-            type: integer
-        - name: page
-          in: query
-          schema:
-            type: integer
-      responses:
-        200:
-          description: Success
-
-  /tweets/{tweet_id}:
-    get:
-      tags: [Tweets]
-      summary: Get tweet detail
-      parameters:
-        - name: tweet_id
-          in: path
-          required: true
+        - in: query
+          name: code
           schema:
             type: string
-      responses:
-        200:
-          description: Success
-
-  /tweets/{tweet_id}/children:
-    get:
-      tags: [Tweets]
-      summary: Get tweet children
-      parameters:
-        - name: tweet_id
-          in: path
           required: true
-          schema:
-            type: string
+          description: Authorization code from Google
       responses:
-        200:
-          description: Success
+        302:
+          description: Redirect to client with access_token
 
+  # Media endpoints
   /medias/upload-image:
     post:
       tags: [Medias]
       summary: Upload images
+      description: Upload multiple images (maximum 4 images). Requires authenticated and verified user.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - images
+              properties:
+                images:
+                  type: array
+                  maxItems: 4
+                  items:
+                    type: string
+                    format: binary
       responses:
         200:
-          description: Upload success
+          description: Upload images success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadImagesResponse'
+        401:
+          description: Unauthorized (Invalid or missing access token)
+        403:
+          description: User not verified
+        400:
+          description: Invalid file type
+        500:
+          description: Internal server error
 
   /medias/upload-video:
     post:
       tags: [Medias]
       summary: Upload video
+      description: Upload a video file (mp4 or mov). Requires authenticated and verified user.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - video
+              properties:
+                video:
+                  type: string
+                  format: binary
       responses:
         200:
-          description: Upload success
+          description: Upload video success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadVideoResponse'
+        401:
+          description: Unauthorized (Invalid or missing access token)
+        403:
+          description: User not verified
+        400:
+          description: Invalid file type
+        500:
+          description: Internal server error
 
+  # Tweet endpoints
+  /tweets:
+    post:
+      tags: [Tweets]
+      summary: Create tweet
+      description: Create a new tweet. User must be authenticated and verified.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTweetReqBody'
+      responses:
+        200:
+          description: Create tweet successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTweetResponse'
+        401:
+          description: Unauthorized
+        403:
+          description: User not verified
+        422:
+          description: Validation error
+        500:
+          description: Internal server error
+
+  /tweets/{tweet_id}:
+    get:
+      tags: [Tweets]
+      summary: Get tweet detail
+      description: |
+        Get detail of a tweet.
+
+        This endpoint supports optional authentication.
+
+        - If user is not logged in: only public tweets can be viewed.
+        - If user is logged in: user can view tweets in their Twitter Circle or tweets mentioning them.
+
+      parameters:
+        - name: tweet_id
+          in: path
+          required: true
+          description: MongoDB ObjectId of tweet
+          schema:
+            type: string
+            example: 69b3fcec6d9f750d2edd9ab1
+
+      security:
+        - BearerAuth: []
+        - {}
+
+      responses:
+        200:
+          description: Get Tweet Detail successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTweetDetailResponse'
+
+        401:
+          description: Unauthorized
+
+        403:
+          description: Tweet is not public
+
+        404:
+          description: Tweet not found
+
+        500:
+          description: Internal server error
+
+  #Bookmark endpoints
   /bookmarks:
     post:
       tags: [Bookmarks]
-      summary: Bookmark tweet
-      responses:
-        200:
-          description: Success
+      summary: Bookmark a tweet
+      description: Bookmark a tweet for the authenticated user.
 
-  /bookmarks/{tweet_id}:
-    delete:
-      tags: [Bookmarks]
-      summary: Unbookmark tweet
-      parameters:
-        - name: tweet_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
+      security:
+        - BearerAuth: []
 
-  /like:
-    post:
-      tags: [Like]
-      summary: Like tweet
-      responses:
-        200:
-          description: Success
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookmarkTweetRequest'
 
-  /like/{tweet_id}:
-    delete:
-      tags: [Like]
-      summary: Unlike tweet
-      parameters:
-        - name: tweet_id
-          in: path
-          required: true
-          schema:
-            type: string
       responses:
         200:
-          description: Success
+          description: Bookmark successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkTweetResponse'
 
-  /search:
-    get:
-      tags: [Search]
-      summary: Advanced search
-      parameters:
-        - name: content
-          in: query
-          schema:
-            type: string
-        - name: limit
-          in: query
-          schema:
-            type: integer
-        - name: page
-          in: query
-          schema:
-            type: integer
-      responses:
-        200:
-          description: Success
+        401:
+          description: Unauthorized
 
-  /conversations/receiver/{receiver_id}:
-    get:
-      tags: [Conversation]
-      summary: Get conversation
-      parameters:
-        - name: receiver_id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Success
+        404:
+          description: Tweet not found
+
+        422:
+          description: Validation error
+
+        500:
+          description: Internal server error
 
 components:
   schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjliM2ExZTJlMzkwMTllOWEwNDVjNmE0IiwidmVyaWZ5IjowLCJ0b2tlbl90eXBlIjowLCJpYXQiOjE3NzMzODAwNjcsImV4cCI6MTc2MzM4MDk2N30.Owsih-UdLwyDBAAG8R79zdS7eb6d9bd10AXrWaRSLS4
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjliM2ExZTJlMzkwMTllOWEwNDVjNmE0IiwidmVyaWZ5IjowLCJ0b2tlbl90eXBlIjowLCJpYXQiOjE3NzMzODAwNjcsImV4cCI4MTc3MzM4MDk2N30.Owsih-UdLwyDBAAG8R79zdS7eb6d9bd10AXrWaRSLS4
+
     RegisterReqBody:
       type: object
+      required:
+        - name
+        - email
+        - password
+        - confirm_password
+        - date_of_birth
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 100
+          example: Nguyen Van A
+
         email:
           type: string
+          format: email
+          example: nguyenvana@gmail.com
+
         password:
           type: string
+          minLength: 6
+          maxLength: 50
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$'
+          example: Rtinh123@
+
         confirm_password:
           type: string
+          minLength: 6
+          maxLength: 50
+          description: Must be the same as password
+          example: Rtinh123@
+
         date_of_birth:
           type: string
+          format: ISO8601
+          example: 2023-04-06T08:26:33.781Z
 
     LoginReqBody:
       type: object
+      required:
+        - email
+        - password
       properties:
         email:
           type: string
+          example: nguyenvana@gmail.com
         password:
           type: string
+          example: Rtinh123@
+
+    LogoutReqBody:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token used to logout
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Logout success
+
+    UserProfile:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: MongoDB ObjectId
+          description: MongoDB ObjectId of user
+          example: 69903861babe6ae6d7a9dfa7
+
+        name:
+          type: string
+          example: Nguyen Van A
+
+        email:
+          type: string
+          format: email
+          example: nguyenvana@gmail.com
+
+        date_of_birth:
+          type: string
+          format: ISO8601
+          example: 2023-04-06T08:26:33.781Z
+
+        created_at:
+          type: string
+          format: ISO8601
+          example: 2026-02-14T08:54:57.613Z
+
+        updated_at:
+          type: string
+          format: ISO8601
+          example: 2026-02-14T08:58:46.811Z
+
+        verify:
+          type: integer
+          enum: [0, 1, 2]
+          description: |
+            User verification status
+
+            0 = Unverified  
+            1 = Verified  
+            2 = Banned
+          example: 1
+
+        tweet_circle:
+          type: array
+          description: List of user ids in tweet circle
+          items:
+            type: string
+            description: MongoDB ObjectId
+          example:
+            - 6990389ebabe6ae6d7a9dfaa
+            - 699038cbbabe6ae6d7a9dfae
+
+        bio:
+          type: string
+          example: Hello everyone
+
+        location:
+          type: string
+          example: Vietnam
+
+        website:
+          type: string
+          example: https://example.com
+
+        username:
+          type: string
+          example: user69903861babe6ae6d7a9dfa7
+
+        avatar:
+          type: string
+          example: https://cdn.site.com/avatar.jpg
+
+        cover_photo:
+          type: string
+          example: https://cdn.site.com/cover.jpg
+
+    GetMeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Get my profile success
+        result:
+          $ref: '#/components/schemas/UserProfile'
+
+    VerifyEmailReqBody:
+      type: object
+      required:
+        - email_verify_token
+      properties:
+        email_verify_token:
+          type: string
+          description: JWT token sent to user email for verification
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    VerifyEmailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Email verify success
+        result:
+          $ref: '#/components/schemas/SuccessResponse'
+
+    ResendVerifyEmailReqBody:
+      type: object
+      required:
+        - email_verify_token
+      properties:
+        email_verify_token:
+          type: string
+          description: Email verify token used to resend verification email
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    ResendVerifyEmailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Resend email verify success
 
     UpdateMeReqBody:
       type: object
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 100
+          example: Nguyen Van A
+
+        date_of_birth:
+          type: string
+          format: ISO8601
+          example: 2023-04-06T08:26:33.781Z
+
         bio:
           type: string
+          minLength: 1
+          maxLength: 200
+          example: Hello everyone
+
         location:
           type: string
+          minLength: 1
+          maxLength: 200
+          example: Vietnam
+
         website:
           type: string
+          minLength: 1
+          maxLength: 200
+          example: https://example.com
+
         username:
           type: string
+          minLength: 1
+          maxLength: 50
+          example: nguyenvana
+
         avatar:
           type: string
+          description: Avatar image URL
+          example: https://cdn.site.com/avatar.jpg
+
         cover_photo:
           type: string
+          description: Cover photo image URL
+          example: https://cdn.site.com/cover.jpg
 
-    TweetRequestBody:
+    UpdateMeResponse:
       type: object
+      properties:
+        message:
+          type: string
+          example: Update my profile success
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    GetProfileResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Get profile success
+        result:
+          $ref: '#/components/schemas/UserProfile'
+
+    RefreshTokenReqBody:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token used to generate new tokens
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    RefreshTokenResponse:
+      type: object
+      properties:
+        result:
+          $ref: '#/components/schemas/SuccessResponse'
+
+    Media:
+      type: object
+      properties:
+        url:
+          type: string
+          example: https://project.supabase.co/storage/v1/object/public/images/abc123.jpg
+
+        type:
+          type: integer
+          description: |
+            Media type
+
+            0 = Image
+            1 = Video
+          example: 0
+
+    UploadImagesResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Upload success
+
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Media'
+
+    UploadVideoResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Upload success
+
+        result:
+          $ref: '#/components/schemas/Media'
+
+    CreateTweetReqBody:
+      type: object
+      required:
+        - type
+        - audience
+        - content
+        - parent_id
+        - hashtags
+        - mentions
+        - medias
       properties:
         type:
           type: integer
+          description: |
+            Tweet type
+
+            0 = Tweet
+            1 = Retweet
+            2 = Comment
+            3 = QuoteTweet
+          example: 0
+
         audience:
           type: integer
+          description: |
+            Tweet audience
+
+            0 = Everyone
+            1 = TwitterCircle
+          example: 0
+
         content:
           type: string
+          example: content de
+
         parent_id:
           type: string
           nullable: true
+          description: Parent tweet id
+          example: null
+
         hashtags:
           type: array
           items:
             type: string
+          example: []
+
         mentions:
           type: array
           items:
             type: string
+            description: MongoDB ObjectId
+          example: []
+
+        medias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Media'
+          example: []
+
+    CreateTweetResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Create Tweet successfully
+        result:
+          $ref: '#/components/schemas/Tweet'
+
+    Tweet:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId
+          example: 69b3fcec6d9f750d2edd9ab1
+
+        user_id:
+          type: string
+          description: MongoDB ObjectId
+          example: 69b3b6f2353d6f522bb541b7
+
+        type:
+          type: integer
+          description: Tweet type
+          example: 0
+
+        audience:
+          type: integer
+          description: Tweet audience
+          example: 0
+
+        content:
+          type: string
+          example: content de
+
+        parent_id:
+          type: string
+          nullable: true
+          description: Parent tweet id
+          example: null
+
+        hashtags:
+          type: array
+          items:
+            type: string
+            description: MongoDB ObjectId
+          example: []
+
+        mentions:
+          type: array
+          items:
+            type: string
+            description: MongoDB ObjectId
+          example: []
+
+        medias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Media'
+
+        guest_views:
+          type: integer
+          example: 0
+
+        user_views:
+          type: integer
+          example: 0
+
+        created_at:
+          type: string
+          format: ISO8601
+          example: 2026-03-13T12:02:52.665Z
+
+        updated_at:
+          type: string
+          format: ISO8601
+          example: 2026-03-13T12:02:52.665Z
+    GetTweetDetailResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Get Tweet Detail successfully
+
+        result:
+          $ref: '#/components/schemas/TweetDetail'
+    TweetDetail:
+      allOf:
+        - $ref: '#/components/schemas/Tweet'
+        - type: object
+          properties:
+            hashtags:
+              type: array
+              items:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    example: 69b4aa1f6d9f750d2edd9aaa
+                  name:
+                    type: string
+                    example: coding
+
+            mentions:
+              type: array
+              items:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    example: 69903861babe6ae6d7a9dfa7
+                  name:
+                    type: string
+                    example: Nguyen Van A
+                  username:
+                    type: string
+                    example: nguyenvana
+                  avatar:
+                    type: string
+                    example: https://cdn.site.com/avatar.jpg
+
+            bookmarks:
+              type: integer
+              example: 5
+
+            likes:
+              type: integer
+              example: 12
+
+            retweet_count:
+              type: integer
+              example: 3
+
+            comment_count:
+              type: integer
+              example: 4
+
+            quote_count:
+              type: integer
+              example: 1
+
+    BookmarkTweetRequest:
+      type: object
+      required:
+        - tweet_id
+      properties:
+        tweet_id:
+          type: string
+          description: MongoDB ObjectId of the tweet
+          example: 69b406f1b23dca799b11fa0b
+
+    BookmarkTweetResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Bookmark successfully
+
+        result:
+          $ref: '#/components/schemas/Bookmark'
+
+    Bookmark:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 69b413941adb3dd61e708869
+
+        user_id:
+          type: string
+          example: 69b403bc6d9f750d2edd9ab7
+
+        tweet_id:
+          type: string
+          example: 69b406f1b23dca799b11fa0b
+
+        created_at:
+          type: string
+          format: date-time
+          example: 2026-03-13T13:39:32.330Z
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

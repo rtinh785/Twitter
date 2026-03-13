@@ -17,9 +17,16 @@ import { initSocket } from './utils/socket'
 import { envConfig, isProduction } from './constants/config'
 import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
+import swaggerUi from 'swagger-ui-express'
+import fs from 'fs'
+import YAML from 'yaml'
+import path from 'path'
+
 // import { ne } from '@faker-js/faker'
 // import { UPLOAD_VIDEO_DIR, UPLOAD_VIDEO_TEMP_DIR } from './constants/dir'
 // import { UPLOAD_IMAGE_DIR } from './constants/dir'
+const file = fs.readFileSync(path.resolve('twitter-swagger.yaml'), 'utf8')
+const swaggerDocument = YAML.parse(file)
 
 databaseService.connect().then(() => {
   databaseService.indexUser()
@@ -29,7 +36,7 @@ databaseService.connect().then(() => {
 })
 
 const app = express()
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
   limit: 100, // Giới hạn mỗi IP ở 100 yêu cầu mỗi `window` (ở đây, mỗi 15 phút).

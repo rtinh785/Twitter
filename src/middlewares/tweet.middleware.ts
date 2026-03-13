@@ -251,7 +251,7 @@ export const audienceValidator = wrapRequestHandler(async (req: Request, res: Re
     if (!req.decode_authorization) {
       throw new ErrorWithStatus({
         status: HTTP_STATUS.UNAUTHORIZED,
-        message: TWEETS_MESSAGES.TWEET_IS_NOT_PUBLIC
+        message: 'Tweet is only for twitter circle. Please login to view this tweet.'
       })
     }
 
@@ -267,7 +267,9 @@ export const audienceValidator = wrapRequestHandler(async (req: Request, res: Re
     }
 
     const { user_id } = req.decode_authorization
-    const isInTwitterCircle = author.tweet_circle.some((user_circle_id) => user_circle_id.equals(user_id))
+    const isInTwitterCircle = author.tweet_circle.some((user_circle_id) => {
+      return user_circle_id.equals(user_id)
+    })
     if (!author._id.equals(user_id) && !isInTwitterCircle) {
       throw new ErrorWithStatus({
         status: HTTP_STATUS.FORBIDDEN,

@@ -1,7 +1,6 @@
 import { Request } from 'express'
 import { getNameFromFullName, handleUploadImages, handleUploadVideos } from '~/utils/file'
 import fs from 'fs'
-import { isProduction } from '~/constants/config'
 import { config } from 'dotenv'
 import { MediaType } from '~/constants/enum'
 import { Media } from '~/models/Other'
